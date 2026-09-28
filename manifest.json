@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "datePolicy": "device-local",
+  "validThrough": "2026-12-31",
+  "windows": [
+    {
+      "from": "2026-09-28",
+      "through": "2026-12-31",
+      "edition": "local-v1",
+      "minBuild": {
+        "ios": 1,
+        "android": 1
+      }
+    }
+  ],
+  "updates": {
+    "ios": {
+      "url": null
+    },
+    "android": {
+      "url": null
+    }
+  }
+}

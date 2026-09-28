@@ -4,3 +4,6 @@
 *.pem
 *.key
 .local/
+dist/
+__pycache__/
+*.pyc

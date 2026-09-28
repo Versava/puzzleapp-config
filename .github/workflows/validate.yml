@@ -1,0 +1,30 @@
+name: Validate public configuration
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -v
+      - name: Verify published assignments stay immutable
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python scripts/validate_manifest.py
+          if [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "$BASE_SHA:manifest.json" 2>/dev/null; then
+            git show "$BASE_SHA:manifest.json" > "$RUNNER_TEMP/previous-manifest.json"
+            python scripts/validate_manifest.py --previous "$RUNNER_TEMP/previous-manifest.json"
+          fi
+      - run: python scripts/check_release.py && python scripts/build.py
