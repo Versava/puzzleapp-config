@@ -7,17 +7,19 @@ configuration; none of it belongs in this public repository.
 
 ## Schedule
 
-`manifest.json` revision 1 assigns **2026-09-28 through 2026-12-31**, inclusive,
-to generator edition `local-v1`. The edition produces Picture Logic, Mini Sudoku,
-Colour Links, and Train Tracks from the device's local calendar date. Everyone
-using the same edition and date gets the same daily questions.
+`manifest.json` revision 3 covers **0001-01-01 through 2026-12-31** with the
+frozen `local-v1` / `daily-mix-v1` recipe. Four games are selected deterministically
+for each civil date from Picture Logic, Mini Sudoku, Colour Links, Train Tracks,
+Star Battle and Jigsaw Sudoku. Everyone using that recipe and date gets the same
+questions. Archive days are generated only when selected; this repository does
+not contain centuries of level files.
 
-Revision 2 uses a `selections` window for **2026-09-28 through 2026-12-31**.
-Edition `daily-mix-v1` chooses four different game types from the six-game pool
-using a separate deterministic date seed. Star Battle and Jigsaw Sudoku are
-included in that pool. Compatible development build `0.1.0+2` applies this to
-today too; this project is in active development. Selected questions keep their
-candidate IDs and revisions, and saved attempts keep their question snapshots.
+The interval **0001-01-01 through 2026-09-27** requires development build
+`0.1.0+3`. The existing **2026-09-28 through 2026-12-31** windows preserve their
+previous minimum builds, settings, candidate IDs and question revisions. Started
+attempts retain their exact snapshots. The separate account service keeps its
+reward catalog bounded from September 28, 2026; older archive coverage does not
+authorize historical reward backfill.
 
 Build `0.1.0+1` understands the base schedule; `0.1.0+2` understands the daily
 mix. The app has not been released in the stores, so both store URLs are `null`.
@@ -38,8 +40,8 @@ those users do not have. Static metadata never installs executable code.
 | `additions` | Optional ordered, nonoverlapping windows within base coverage, with separately versioned extra games and platform `minBuild`. |
 | `updates` | Optional official App Store / Google Play HTTPS URLs; `null` before release. |
 
-Dates are limited to 2000–2100, manifests to 256 KiB and 128 windows, and integer
-fields to positive signed 32-bit values. Selections and legacy additions each have a 128-window limit; gaps are allowed between these optional windows. Unknown fields, duplicate keys, base
+Dates use the proleptic Gregorian calendar, years 0001–9999. Manifests are limited
+to 256 KiB and 128 base windows; integer fields use positive signed 32-bit values. Selections and legacy additions each have a 128-window limit; gaps are allowed between these optional windows. Unknown fields, duplicate keys, base
 coverage gaps, overlaps, invalid dates, and unsupported schema versions are rejected.
 `manifest.schema.json` describes the structure; `scripts/validate_manifest.py`
 also checks calendar semantics and immutable publication history.
@@ -70,21 +72,26 @@ required. Run from this repository:
 
 ```sh
 python3 -m unittest discover -s tests -v
-python3 scripts/check_release.py
+python3 scripts/check_release.py --baseline-ref cc8f8ab
 python3 scripts/build.py
 ```
 
 The history check validates the current schedule against previous published
-mainline manifests. The static build copies only `manifest.json`,
+mainline manifests from the explicit revision-2 development checkpoint
+`cc8f8ab`. That checkpoint records the approved four-of-six daily settings before
+strict overlap immutability was introduced. All commits since it remain checked,
+including hidden rewrites followed by unrelated commits. Without `--baseline-ref`,
+the gate checks the entire history. The static build copies only `manifest.json`,
 `manifest.schema.json`, `index.html`, `404.html`, and `_headers` to `dist/`.
 No application source, puzzle answers, server functions, or credentials are built.
 
 For a calendar extension:
 
-1. Increment `revision` and extend the final window, or append a contiguous window.
+1. Increment `revision` and extend coverage by prepending or appending contiguous windows.
 2. Preserve all existing date assignments and minimum builds.
-   To add games within base coverage, append an immutable additions window for a
-   future date and require its compatible build; retain the original base window.
+   This includes the absence of optional selection/addition rules: adding one
+   over previously covered dates also changes their effective recipe and is rejected.
+   Introduce new game mixes only on dates outside already announced coverage.
 3. If introducing an edition, release and verify compatible app builds first.
 4. Run the validation commands and review the manifest diff before pushing.
 5. After hosting deploys, verify the response body, revision, CORS, cache headers,
@@ -96,7 +103,7 @@ Use framework **None**, production branch **main**, output directory **dist**, a
 this build command:
 
 ```sh
-python3 -m unittest discover -s tests && python3 scripts/check_release.py && python3 scripts/build.py
+python3 -m unittest discover -s tests && python3 scripts/check_release.py --baseline-ref cc8f8ab && python3 scripts/build.py
 ```
 
 The production URL is [puzzle.versava.net/manifest.json](https://puzzle.versava.net/manifest.json),

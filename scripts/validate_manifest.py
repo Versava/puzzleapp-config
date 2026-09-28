@@ -28,7 +28,7 @@ def positive(value):
 def day(value):
     require(isinstance(value, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value), "Expected YYYY-MM-DD")
     parsed = date.fromisoformat(value)
-    require(date(2000, 1, 1) <= parsed <= date(2100, 12, 31), "Date outside supported range")
+    require(date(1, 1, 1) <= parsed <= date(9999, 12, 31), "Date outside supported range")
     return parsed
 
 
@@ -188,24 +188,24 @@ def validate_extension(previous, current):
     if current["revision"] == previous["revision"]:
         require(current == previous, "A published revision changed")
         return
-    require(current["windows"][0]["from"] == previous["windows"][0]["from"], "Published start date changed")
-    require(day(current["validThrough"]) >= day(previous["validThrough"]), "Published coverage shrank")
-    for old in previous["windows"]:
-        for new in current["windows"]:
-            if max(old["from"], new["from"]) <= min(old["through"], new["through"]):
-                require(old["edition"] == new["edition"] and old["minBuild"] == new["minBuild"], "Published date assignment changed")
-
-    for field in ("additions", "selections"):
-        for old in previous.get(field, []):
-            cursor = day(old["from"])
-            for new in current.get(field, []):
-                if day(new["through"]) < cursor or new["from"] > old["through"]:
-                    continue
-                require(day(new["from"]) <= cursor and old["edition"] == new["edition"] and old["minBuild"] == new["minBuild"], "Published optional assignment changed")
-                cursor = day(new["through"]) + timedelta(days=1)
-                if cursor > day(old["through"]):
-                    break
-            require(cursor > day(old["through"]), "Published optional coverage removed")
+    first, last = previous["windows"][0]["from"], previous["validThrough"]
+    require(current["windows"][0]["from"] <= first and current["validThrough"] >= last, "Published coverage shrank")
+    boundaries = {first}
+    for manifest in (previous, current):
+        for field in ("windows", "additions", "selections"):
+            for window in manifest.get(field, []):
+                if first <= window["from"] <= last:
+                    boundaries.add(window["from"])
+                if first <= window["through"] < last:
+                    boundaries.add((day(window["through"]) + timedelta(days=1)).isoformat())
+    def identity(manifest, field, when):
+        for window in manifest.get(field, []):
+            if window["from"] <= when <= window["through"]:
+                return window["edition"], window["minBuild"]
+        return None
+    for when in boundaries:
+        for field in ("windows", "additions", "selections"):
+            require(identity(previous, field, when) == identity(current, field, when), "Published date assignment changed")
 
 
 def main():

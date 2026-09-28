@@ -143,7 +143,8 @@ class AdditionsTests(unittest.TestCase):
         self.current['additions'] = [{'from': '2026-09-29', 'through': '2026-12-31', 'edition': 'daily-extras-v1', 'minBuild': {'ios': 2, 'android': 2}}]
 
     def test_legacy_upgrade_and_identical_split_keep_base_and_additions(self):
-        validate_extension(self.base, self.current)
+        with self.assertRaises(ValueError):
+            validate_extension(self.base, self.current)
         newer = copy.deepcopy(self.current)
         newer['revision'] = 3
         newer['additions'] = [dict(newer['additions'][0], through='2026-10-01'), dict(newer['additions'][0], **{'from': '2026-10-02'})]
@@ -185,7 +186,8 @@ class SelectionsTests(unittest.TestCase):
         self.current['selections'][0]['edition'] = 'daily-mix-v1'
 
     def test_selection_upgrade_and_immutable_history(self):
-        validate_extension(self.base, self.current)
+        with self.assertRaises(ValueError):
+            validate_extension(self.base, self.current)
         for field, value in [('from', '2026-09-30'), ('through', '2026-12-30'), ('edition', 'daily-mix-v2'), ('minBuild', {'ios': 3, 'android': 2})]:
             newer = copy.deepcopy(self.current)
             newer['revision'] = 3
@@ -210,3 +212,37 @@ class SelectionsTests(unittest.TestCase):
             bad['selections'] = windows
             with self.assertRaises(ValueError):
                 validate(bad)
+
+class BackwardCoverageTests(unittest.TestCase):
+    def test_prepend_centuries_keeps_every_existing_effective_assignment(self):
+        original = load(ROOT / 'manifest.json')
+        previous = copy.deepcopy(original)
+        previous['revision'] = 2
+        previous['windows'] = previous['windows'][1:]
+        previous['selections'] = previous['selections'][1:]
+        validate_extension(previous, original)
+        for field in ('windows', 'selections'):
+            rewritten = copy.deepcopy(original)
+            rewritten[field][-1]['minBuild']['ios'] += 1
+            with self.assertRaises(ValueError):
+                validate_extension(previous, rewritten)
+        self.assertEqual(original['windows'][0]['from'], '0001-01-01')
+
+    def test_optional_absence_is_immutable_and_transitions_are_checked(self):
+        fixture = ManifestTests(); fixture.setUp()
+        previous = fixture.original
+        for field in ('additions', 'selections'):
+            current = copy.deepcopy(previous)
+            current['revision'] += 1
+            current[field] = [dict(current['windows'][0], **{'from': '2026-10-01', 'through': '2026-10-02'})]
+            with self.assertRaises(ValueError):
+                validate_extension(previous, current)
+
+    def test_full_civil_year_range_and_invalid_year_zero(self):
+        current = load(ROOT / 'manifest.json')
+        bad = copy.deepcopy(current)
+        bad['windows'][0]['from'] = '0000-01-01'
+        with self.assertRaises(ValueError): validate(bad)
+        future = copy.deepcopy(current)
+        future['validThrough'] = future['windows'][-1]['through'] = '9999-12-31'
+        validate(future)

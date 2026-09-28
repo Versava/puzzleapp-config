@@ -27,4 +27,4 @@ jobs:
             git show "$BASE_SHA:manifest.json" > "$RUNNER_TEMP/previous-manifest.json"
             python scripts/validate_manifest.py --previous "$RUNNER_TEMP/previous-manifest.json"
           fi
-      - run: python scripts/check_release.py && python scripts/build.py
+      - run: python scripts/check_release.py --baseline-ref cc8f8ab && python scripts/build.py

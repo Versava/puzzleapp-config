@@ -2,13 +2,14 @@
 
 from pathlib import Path
 import subprocess
+import argparse
 
 from validate_manifest import MAX_BYTES, load, load_bytes, require, validate_extension
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def check_release(root=ROOT):
+def check_release(root=ROOT, baseline_ref=None):
     root = Path(root)
     current = load(root / "manifest.json")
 
@@ -25,6 +26,10 @@ def check_release(root=ROOT):
         "A complete mainline history is required for publication",
     )
     commits = git("rev-list", "--first-parent", "HEAD").decode("ascii").splitlines()
+    if baseline_ref:
+        baseline = git('rev-parse', '--verify', f'{baseline_ref}^{{commit}}').decode('ascii').strip()
+        require(baseline in commits, 'Publication baseline must be in first-parent history')
+        commits = commits[:commits.index(baseline) + 1]
     checked = 0
     seen = set()
     # Include HEAD as well: a local dirty build must preserve its committed
@@ -47,5 +52,8 @@ def check_release(root=ROOT):
 
 
 if __name__ == "__main__":
-    checked = check_release()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--baseline-ref', help='Explicit first immutable release checkpoint; defaults to complete history')
+    args = parser.parse_args()
+    checked = check_release(baseline_ref=args.baseline_ref)
     print("Release preserves", checked, "previous mainline manifest versions")

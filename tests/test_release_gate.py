@@ -112,3 +112,27 @@ class ReleaseGateTests(unittest.TestCase):
         self.git("clone", "-q", "--depth", "1", self.root.as_uri(), str(clone))
         with self.assertRaisesRegex(ValueError, "Published date assignment changed"):
             check_release(clone)
+
+class BaselineGateTests(ReleaseGateTests):
+    def test_explicit_baseline_still_rejects_later_hidden_rewrite(self):
+        self.establish_release()
+        baseline = self.git('rev-parse', 'HEAD').decode().strip()
+        newer = original_manifest()
+        newer['revision'] = 2
+        newer['windows'][0]['edition'] = 'local-v2'
+        self.manifest(newer)
+        self.commit('unapproved rewrite after checkpoint')
+        with self.assertRaises(ValueError):
+            check_release(self.root, baseline_ref=baseline)
+
+    def test_explicit_baseline_excludes_only_earlier_development_mappings(self):
+        self.hidden_rewrite()
+        baseline = self.git('rev-parse', 'HEAD').decode().strip()
+        self.assertEqual(check_release(self.root, baseline_ref=baseline), 1)
+        self.git('checkout', '-q', '-b', 'unrelated')
+        (self.root / 'other').write_text('branch')
+        self.commit('another branch')
+        not_mainline = self.git('rev-parse', 'HEAD').decode().strip()
+        self.git('checkout', '-q', 'main')
+        with self.assertRaisesRegex(ValueError, 'first-parent history'):
+            check_release(self.root, baseline_ref=not_mainline)
