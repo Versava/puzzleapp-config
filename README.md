@@ -7,7 +7,7 @@ configuration; none of it belongs in this public repository.
 
 ## Schedule
 
-Prepared `manifest.json` revision 4 covers **0001-01-01 through 2026-12-31**.
+Published `manifest.json` revision 4 covers **0001-01-01 through 2026-12-31**.
 It preserves `local-v1` through September 27 and uses `local-v2` from September 28;
 both use the frozen `daily-mix-v1` selection of four games from the six-game pool.
 In `local-v2`, each date and game independently selects easy, medium or hard from
@@ -119,11 +119,9 @@ python3 -m unittest discover -s tests && python3 scripts/check_release.py --base
 
 The production URL is [puzzle.versava.net/manifest.json](https://puzzle.versava.net/manifest.json),
 with [puzzleapp-config.pages.dev/manifest.json](https://puzzleapp-config.pages.dev/manifest.json)
-as the host URL. The prior revision was verified on 2026-09-28: exact manifest bytes, HTTP 200,
-public CORS, five-minute freshness, ETag conditional 304, and missing-file 404.
+as the host URL. Revision 4 was verified on 2026-09-28 at both URLs: exact bundled manifest bytes and HTTP 200. Its SHA-256 is `347e1b0ba02ae4af7be49445b97ef7cbf6a5cc882f58b6557e405f59e9423f8c`. The existing hosting configuration retains public CORS and five-minute freshness.
 The Cloudflare GitHub integration is limited to **only this public repository**.
-A static Pages project needs no EC2, database, or runtime API. Revision 4 is
-prepared locally; its publication and matching app/Worker rollout are not claimed here.
+A static Pages project needs no EC2, database, or runtime API. The matching build-4 Flutter web release and Worker catalog are deployed; no store release is claimed.
 
 The manifest is public and uses a five-minute HTTP cache lifetime, public CORS,
 and ETags supplied by the host. Native clients use conditional requests. Browser
