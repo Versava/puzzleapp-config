@@ -129,3 +129,84 @@ class ManifestTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class AdditionsTests(unittest.TestCase):
+    def setUp(self):
+        self.base = {
+            'schemaVersion': 1, 'revision': 1, 'datePolicy': 'device-local',
+            'validThrough': '2026-12-31',
+            'windows': [{'from': '2026-09-28', 'through': '2026-12-31', 'edition': 'local-v1', 'minBuild': {'ios': 1, 'android': 1}}],
+            'updates': {'ios': {'url': None}, 'android': {'url': None}},
+        }
+        self.current = copy.deepcopy(self.base)
+        self.current['revision'] = 2
+        self.current['additions'] = [{'from': '2026-09-29', 'through': '2026-12-31', 'edition': 'daily-extras-v1', 'minBuild': {'ios': 2, 'android': 2}}]
+
+    def test_legacy_upgrade_and_identical_split_keep_base_and_additions(self):
+        validate_extension(self.base, self.current)
+        newer = copy.deepcopy(self.current)
+        newer['revision'] = 3
+        newer['additions'] = [dict(newer['additions'][0], through='2026-10-01'), dict(newer['additions'][0], **{'from': '2026-10-02'})]
+        validate_extension(self.current, newer)
+        newer['additions'][1]['from'] = '2026-10-03'
+        with self.assertRaises(ValueError):
+            validate_extension(self.current, newer)
+
+    def test_additions_cannot_be_removed_shortened_or_rewritten(self):
+        for field, value in [('from', '2026-09-30'), ('through', '2026-12-30'), ('edition', 'daily-extras-v2'), ('minBuild', {'ios': 3, 'android': 2})]:
+            newer = copy.deepcopy(self.current)
+            newer['revision'] = 3
+            newer['additions'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_extension(self.current, newer)
+        newer = copy.deepcopy(self.current)
+        newer['revision'] = 3
+        del newer['additions']
+        with self.assertRaises(ValueError):
+            validate_extension(self.current, newer)
+
+    def test_additions_are_bounded_covered_and_nonoverlapping(self):
+        cases = [None, [], self.current['additions'] * 129, self.current['additions'] * 2,
+                 [dict(self.current['additions'][0], **{'from': '2026-09-27'})],
+                 [dict(self.current['additions'][0], through='2027-01-01')]]
+        for additions in cases:
+            bad = copy.deepcopy(self.current)
+            bad['additions'] = additions
+            with self.subTest(additions=additions), self.assertRaises(ValueError):
+                validate(bad)
+
+class SelectionsTests(unittest.TestCase):
+    def setUp(self):
+        fixture = AdditionsTests()
+        fixture.setUp()
+        self.base = fixture.base
+        self.current = fixture.current
+        self.current['selections'] = self.current.pop('additions')
+        self.current['selections'][0]['edition'] = 'daily-mix-v1'
+
+    def test_selection_upgrade_and_immutable_history(self):
+        validate_extension(self.base, self.current)
+        for field, value in [('from', '2026-09-30'), ('through', '2026-12-30'), ('edition', 'daily-mix-v2'), ('minBuild', {'ios': 3, 'android': 2})]:
+            newer = copy.deepcopy(self.current)
+            newer['revision'] = 3
+            newer['selections'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_extension(self.current, newer)
+        newer = copy.deepcopy(self.current)
+        newer['revision'] = 3
+        del newer['selections']
+        with self.assertRaises(ValueError):
+            validate_extension(self.current, newer)
+
+    def test_selection_and_additions_cannot_overlap(self):
+        overlapping = copy.deepcopy(self.current)
+        overlapping['additions'] = copy.deepcopy(overlapping['selections'])
+        with self.assertRaises(ValueError):
+            validate(overlapping)
+
+    def test_additions_are_bounded_covered_and_nonoverlapping(self):
+        for windows in [None, [], self.current['selections'] * 129, self.current['selections'] * 2]:
+            bad = copy.deepcopy(self.current)
+            bad['selections'] = windows
+            with self.assertRaises(ValueError):
+                validate(bad)

@@ -5,16 +5,25 @@ The application monorepo includes this repository at `public-config/`. The separ
 `puzzleapp-deploy` repository stays private and contains legacy infrastructure
 configuration; none of it belongs in this public repository.
 
-## Initial schedule
+## Schedule
 
 `manifest.json` revision 1 assigns **2026-09-28 through 2026-12-31**, inclusive,
 to generator edition `local-v1`. The edition produces Picture Logic, Mini Sudoku,
 Colour Links, and Train Tracks from the device's local calendar date. Everyone
 using the same edition and date gets the same daily questions.
 
-The first compatible development build is `0.1.0+1`. The app has not yet been
-released in the stores, so both store URLs are `null`. Do not announce a public
-app release or activate a new edition until compatible store builds are available.
+Revision 2 uses a `selections` window for **2026-09-28 through 2026-12-31**.
+Edition `daily-mix-v1` chooses four different game types from the six-game pool
+using a separate deterministic date seed. Star Battle and Jigsaw Sudoku are
+included in that pool. Compatible development build `0.1.0+2` applies this to
+today too; this project is in active development. Selected questions keep their
+candidate IDs and revisions, and saved attempts keep their question snapshots.
+
+Build `0.1.0+1` understands the base schedule; `0.1.0+2` understands the daily
+mix. The app has not been released in the stores, so both store URLs are `null`.
+Development metadata can target verified local development builds. Once there
+are public app releases, publish compatible store builds before scheduling code
+those users do not have. Static metadata never installs executable code.
 
 ## Manifest contract
 
@@ -25,11 +34,13 @@ app release or activate a new edition until compatible store builds are availabl
 | `datePolicy` | `device-local`: a civil date, not an instant or a UTC reset. |
 | `validThrough` | Final covered date, equal to the last window's `through`. |
 | `windows` | Ordered, contiguous, inclusive date ranges with `edition` and platform `minBuild`. |
+| `selections` | Optional ordered, nonoverlapping windows selecting a frozen daily game mix and platform `minBuild`. |
+| `additions` | Optional ordered, nonoverlapping windows within base coverage, with separately versioned extra games and platform `minBuild`. |
 | `updates` | Optional official App Store / Google Play HTTPS URLs; `null` before release. |
 
 Dates are limited to 2000–2100, manifests to 256 KiB and 128 windows, and integer
-fields to positive signed 32-bit values. Unknown fields, duplicate keys, gaps,
-overlaps, invalid dates, and unsupported schema versions are rejected.
+fields to positive signed 32-bit values. Selections and legacy additions each have a 128-window limit; gaps are allowed between these optional windows. Unknown fields, duplicate keys, base
+coverage gaps, overlaps, invalid dates, and unsupported schema versions are rejected.
 `manifest.schema.json` describes the structure; `scripts/validate_manifest.py`
 also checks calendar semantics and immutable publication history.
 
@@ -37,6 +48,10 @@ The manifest contains metadata only. Generator code ships inside normal app
 updates. Published date-to-edition and date-to-minimum-build assignments are
 immutable, including announced future dates. Never amend a published edition's
 algorithm: ship a new edition identifier instead.
+Announced selection and legacy addition windows cannot be removed, shortened or
+reassigned. The selection edition freezes the candidate pool and shuffle; later
+game additions use a new edition. Older clients that do not recognize selections
+retain their older base schedule and need an updated app for the daily mix.
 
 ## Offline and update behavior
 
@@ -68,6 +83,8 @@ For a calendar extension:
 
 1. Increment `revision` and extend the final window, or append a contiguous window.
 2. Preserve all existing date assignments and minimum builds.
+   To add games within base coverage, append an immutable additions window for a
+   future date and require its compatible build; retain the original base window.
 3. If introducing an edition, release and verify compatible app builds first.
 4. Run the validation commands and review the manifest diff before pushing.
 5. After hosting deploys, verify the response body, revision, CORS, cache headers,

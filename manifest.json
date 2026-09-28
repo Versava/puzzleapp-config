@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 1,
+  "revision": 2,
   "datePolicy": "device-local",
   "validThrough": "2026-12-31",
   "windows": [
@@ -21,5 +21,16 @@
     "android": {
       "url": null
     }
-  }
+  },
+  "selections": [
+    {
+      "from": "2026-09-28",
+      "through": "2026-12-31",
+      "edition": "daily-mix-v1",
+      "minBuild": {
+        "ios": 2,
+        "android": 2
+      }
+    }
+  ]
 }

@@ -33,7 +33,7 @@ def day(value):
 
 
 def validate(value):
-    keys(value, ("schemaVersion", "revision", "datePolicy", "validThrough", "windows", "updates"))
+    keys(value, ("schemaVersion", "revision", "datePolicy", "validThrough", "windows", "updates", *(("additions",) if "additions" in value else ()), *(("selections",) if "selections" in value else ())))
     require(type(value["schemaVersion"]) is int and value["schemaVersion"] == 1, "Unsupported schema")
     positive(value["revision"])
     require(value["datePolicy"] == "device-local", "Unsupported date policy")
@@ -52,6 +52,23 @@ def validate(value):
             positive(build)
         previous = through
     require(previous == end, "validThrough must match the final window")
+    for field in ("additions", "selections"):
+        optional = value.get(field, [])
+        require(isinstance(optional, list) and (field not in value or 1 <= len(optional) <= 128), "Expected 1..128 optional windows")
+        previous = None
+        for window in optional:
+            keys(window, ("from", "through", "edition", "minBuild"))
+            start, through = day(window["from"]), day(window["through"])
+            require(day(windows[0]["from"]) <= start <= through <= end, "Optional window outside base coverage")
+            require(previous is None or start > previous, "Optional windows must be ordered and nonoverlapping")
+            require(isinstance(window["edition"], str) and re.fullmatch(r"[a-z][a-z0-9-]{0,63}", window["edition"]), "Invalid optional edition")
+            keys(window["minBuild"], ("ios", "android"))
+            for build in window["minBuild"].values():
+                positive(build)
+            previous = through
+    for addition in value.get("additions", []):
+        for selection in value.get("selections", []):
+            require(max(addition["from"], selection["from"]) > min(addition["through"], selection["through"]), "Selection and additions windows overlap")
     keys(value["updates"], ("ios", "android"))
     for platform, host in (("ios", "apps.apple.com"), ("android", "play.google.com")):
         update = value["updates"][platform]
@@ -177,6 +194,18 @@ def validate_extension(previous, current):
         for new in current["windows"]:
             if max(old["from"], new["from"]) <= min(old["through"], new["through"]):
                 require(old["edition"] == new["edition"] and old["minBuild"] == new["minBuild"], "Published date assignment changed")
+
+    for field in ("additions", "selections"):
+        for old in previous.get(field, []):
+            cursor = day(old["from"])
+            for new in current.get(field, []):
+                if day(new["through"]) < cursor or new["from"] > old["through"]:
+                    continue
+                require(day(new["from"]) <= cursor and old["edition"] == new["edition"] and old["minBuild"] == new["minBuild"], "Published optional assignment changed")
+                cursor = day(new["through"]) + timedelta(days=1)
+                if cursor > day(old["through"]):
+                    break
+            require(cursor > day(old["through"]), "Published optional coverage removed")
 
 
 def main():
