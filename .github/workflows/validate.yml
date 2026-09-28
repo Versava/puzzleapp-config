@@ -25,6 +25,6 @@ jobs:
           python scripts/validate_manifest.py
           if [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]] && git cat-file -e "$BASE_SHA:manifest.json" 2>/dev/null; then
             git show "$BASE_SHA:manifest.json" > "$RUNNER_TEMP/previous-manifest.json"
-            python scripts/validate_manifest.py --previous "$RUNNER_TEMP/previous-manifest.json"
+            python scripts/validate_manifest.py --previous "$RUNNER_TEMP/previous-manifest.json" --development-transition development-transition.json
           fi
       - run: python scripts/check_release.py --baseline-ref cc8f8ab && python scripts/build.py

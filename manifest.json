@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": 3,
+  "revision": 4,
   "datePolicy": "device-local",
   "validThrough": "2026-12-31",
   "windows": [
@@ -16,10 +16,10 @@
     {
       "from": "2026-09-28",
       "through": "2026-12-31",
-      "edition": "local-v1",
+      "edition": "local-v2",
       "minBuild": {
-        "ios": 1,
-        "android": 1
+        "ios": 4,
+        "android": 4
       }
     }
   ],
@@ -46,8 +46,8 @@
       "through": "2026-12-31",
       "edition": "daily-mix-v1",
       "minBuild": {
-        "ios": 2,
-        "android": 2
+        "ios": 4,
+        "android": 4
       }
     }
   ]

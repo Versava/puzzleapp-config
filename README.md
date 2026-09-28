@@ -7,25 +7,25 @@ configuration; none of it belongs in this public repository.
 
 ## Schedule
 
-`manifest.json` revision 3 covers **0001-01-01 through 2026-12-31** with the
-frozen `local-v1` / `daily-mix-v1` recipe. Four games are selected deterministically
-for each civil date from Picture Logic, Mini Sudoku, Colour Links, Train Tracks,
-Star Battle and Jigsaw Sudoku. Everyone using that recipe and date gets the same
-questions. Archive days are generated only when selected; this repository does
-not contain centuries of level files.
+Prepared `manifest.json` revision 4 covers **0001-01-01 through 2026-12-31**.
+It preserves `local-v1` through September 27 and uses `local-v2` from September 28;
+both use the frozen `daily-mix-v1` selection of four games from the six-game pool.
+In `local-v2`, each date and game independently selects easy, medium or hard from
+a deterministic seed. The selected game kinds remain unchanged. Archive days
+are generated only when selected; this repository contains no level files.
 
-The interval **0001-01-01 through 2026-09-27** requires development build
-`0.1.0+3`. The existing **2026-09-28 through 2026-12-31** windows preserve their
-previous minimum builds, settings, candidate IDs and question revisions. Started
-attempts retain their exact snapshots. The separate account service keeps its
-reward catalog bounded from September 28, 2026; older archive coverage does not
-authorize historical reward backfill.
+**0001-01-01 through 2026-09-27** retains its exact recipe and minimum build 3.
+**2026-09-28 through 2026-12-31** now requires build 4 under the explicit
+development acknowledgement below. Existing attempts retain their exact
+snapshots. The account service retains all 285 prior releases for old tickets
+beside 95 new selected releases; existing account balances and grants are unchanged.
 
-Build `0.1.0+1` understands the base schedule; `0.1.0+2` understands the daily
-mix. The app has not been released in the stores, so both store URLs are `null`.
-Development metadata can target verified local development builds. Once there
-are public app releases, publish compatible store builds before scheduling code
-those users do not have. Static metadata never installs executable code.
+Build `0.1.0+1` understands the base schedule, `0.1.0+2` the daily mix, and
+`0.1.0+4` the new difficulty edition and bundled baseline. Older clients continue
+to reject rewritten assignments during refresh; a native app update supplies
+the new baseline. PuzzleApp is not released in stores, so both store URLs remain
+`null`. Static metadata never installs executable code. Compatible store builds
+must precede new editions once public store releases exist.
 
 ## Manifest contract
 
@@ -85,6 +85,17 @@ the gate checks the entire history. The static build copies only `manifest.json`
 `manifest.schema.json`, `index.html`, `404.html`, and `_headers` to `dist/`.
 No application source, puzzle answers, server functions, or credentials are built.
 
+For the user-approved active-development difficulty change,
+`development-transition.json` records exact canonical SHA-256 hashes of the
+revision-2 and revision-3 source manifests, the full revision-4 replacement and
+its hash, and the only approved interval: **2026-09-28–2026-12-31**. The publication
+gate checks those exact artifacts, keeps all earlier archive dates fixed, and
+requires subsequent revisions to preserve the entire replacement. It does not
+permit another rewrite, unknown source content or hidden edits. Ordinary
+`validate_extension` remains strict; CI's previous-manifest check explicitly
+uses this acknowledgement. It is source history, not an app-manifest field,
+and is excluded from static hosting output.
+
 For a calendar extension:
 
 1. Increment `revision` and extend coverage by prepending or appending contiguous windows.
@@ -108,10 +119,11 @@ python3 -m unittest discover -s tests && python3 scripts/check_release.py --base
 
 The production URL is [puzzle.versava.net/manifest.json](https://puzzle.versava.net/manifest.json),
 with [puzzleapp-config.pages.dev/manifest.json](https://puzzleapp-config.pages.dev/manifest.json)
-as the host URL. Both were verified on 2026-09-28: exact manifest bytes, HTTP 200,
+as the host URL. The prior revision was verified on 2026-09-28: exact manifest bytes, HTTP 200,
 public CORS, five-minute freshness, ETag conditional 304, and missing-file 404.
 The Cloudflare GitHub integration is limited to **only this public repository**.
-A static Pages project needs no EC2, database, or runtime API.
+A static Pages project needs no EC2, database, or runtime API. Revision 4 is
+prepared locally; its publication and matching app/Worker rollout are not claimed here.
 
 The manifest is public and uses a five-minute HTTP cache lifetime, public CORS,
 and ETags supplied by the host. Native clients use conditional requests. Browser

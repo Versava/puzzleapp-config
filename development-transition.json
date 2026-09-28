@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "authorizedOn": "2026-09-28",
+  "reason": "Explicitly approved active-development change: randomize each game difficulty from the date seed using a new local-v2 edition. Preserve local-v1 archive dates through 2026-09-27, existing saved attempts, and previously issued reward tickets. This is not a store release or a general permission to rewrite published assignments.",
+  "from": "2026-09-28",
+  "through": "2026-12-31",
+  "previousManifestSha256": [
+    "ff5a9ba1bf06de1014e2476b1f5a95af8eba9538dda8073c15079d4f7a93ab1e",
+    "192933b58e9e7256519ff52bc2b0699091382953df08a7ff08fee4cf57efbc64"
+  ],
+  "replacementManifestSha256": "4ed8d2c1da5cd9231010b9eb02ef6e33ff4942a2500e3144f96210a77bf9c739",
+  "replacementManifest": {
+    "schemaVersion": 1,
+    "revision": 4,
+    "datePolicy": "device-local",
+    "validThrough": "2026-12-31",
+    "windows": [
+      {
+        "from": "0001-01-01",
+        "through": "2026-09-27",
+        "edition": "local-v1",
+        "minBuild": {
+          "ios": 3,
+          "android": 3
+        }
+      },
+      {
+        "from": "2026-09-28",
+        "through": "2026-12-31",
+        "edition": "local-v2",
+        "minBuild": {
+          "ios": 4,
+          "android": 4
+        }
+      }
+    ],
+    "updates": {
+      "ios": {
+        "url": null
+      },
+      "android": {
+        "url": null
+      }
+    },
+    "selections": [
+      {
+        "from": "0001-01-01",
+        "through": "2026-09-27",
+        "edition": "daily-mix-v1",
+        "minBuild": {
+          "ios": 3,
+          "android": 3
+        }
+      },
+      {
+        "from": "2026-09-28",
+        "through": "2026-12-31",
+        "edition": "daily-mix-v1",
+        "minBuild": {
+          "ios": 4,
+          "android": 4
+        }
+      }
+    ]
+  }
+}

@@ -4,7 +4,8 @@ from pathlib import Path
 import subprocess
 import argparse
 
-from validate_manifest import MAX_BYTES, load, load_bytes, require, validate_extension
+from validate_manifest import MAX_BYTES, load, load_bytes, require
+from development_transition import load_transition, validate_publication
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -12,6 +13,8 @@ ROOT = Path(__file__).resolve().parent.parent
 def check_release(root=ROOT, baseline_ref=None):
     root = Path(root)
     current = load(root / "manifest.json")
+    transition_path = root / "development-transition.json"
+    acknowledgement = load_transition(transition_path) if transition_path.is_file() else None
 
     def git(*args):
         return subprocess.run(
@@ -46,7 +49,7 @@ def check_release(root=ROOT, baseline_ref=None):
         seen.add(object_id)
         require(int(git("cat-file", "-s", object_id)) <= MAX_BYTES, "Historical manifest exceeds size limit")
         previous = load_bytes(git("cat-file", "blob", object_id))
-        validate_extension(previous, current)
+        validate_publication(previous, current, acknowledgement)
         checked += 1
     return checked
 
@@ -56,4 +59,4 @@ if __name__ == "__main__":
     parser.add_argument('--baseline-ref', help='Explicit first immutable release checkpoint; defaults to complete history')
     args = parser.parse_args()
     checked = check_release(baseline_ref=args.baseline_ref)
-    print("Release preserves", checked, "previous mainline manifest versions")
+    print("Release validated against", checked, "previous mainline manifest versions")

@@ -212,10 +212,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", nargs="?", default="manifest.json")
     parser.add_argument("--previous")
+    parser.add_argument("--development-transition", help="Exact reviewed development acknowledgement; normal validation stays strict")
     args = parser.parse_args()
     current = load(args.manifest)
     if args.previous:
-        validate_extension(load(args.previous), current)
+        if args.development_transition:
+            from development_transition import load_transition, validate_publication
+            validate_publication(load(args.previous), current, load_transition(args.development_transition))
+        else:
+            validate_extension(load(args.previous), current)
     print("Manifest valid: revision", current["revision"], "through", current["validThrough"])
 
 
