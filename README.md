@@ -82,10 +82,12 @@ this build command:
 python3 -m unittest discover -s tests && python3 scripts/check_release.py && python3 scripts/build.py
 ```
 
-The intended production URL is `https://puzzle.versava.net/manifest.json`.
-Hosting and DNS setup are still in progress; this README is not confirmation that
-the endpoint is live. Configure the Cloudflare GitHub integration for **only this
-public repository**. A static Pages project needs no EC2, database, or runtime API.
+The production URL is [puzzle.versava.net/manifest.json](https://puzzle.versava.net/manifest.json),
+with [puzzleapp-config.pages.dev/manifest.json](https://puzzleapp-config.pages.dev/manifest.json)
+as the host URL. Both were verified on 2026-09-28: exact manifest bytes, HTTP 200,
+public CORS, five-minute freshness, ETag conditional 304, and missing-file 404.
+The Cloudflare GitHub integration is limited to **only this public repository**.
+A static Pages project needs no EC2, database, or runtime API.
 
 The manifest is public and uses a five-minute HTTP cache lifetime, public CORS,
 and ETags supplied by the host. Native clients use conditional requests. Browser
