@@ -72,7 +72,7 @@ def render_document(text):
 
     def inline(value):
         escaped = html.escape(value)
-        return escaped.replace("support@versava.net", '<a href="mailto:support@versava.net">support@versava.net</a>')
+        return escaped.replace("support@versava.net", '<!--email_off--><a href="mailto:support@versava.net">support@versava.net</a><!--/email_off-->')
 
     def flush():
         if paragraph:
@@ -174,7 +174,7 @@ def render_pages(root, current, editions):
     add("/legal/", page("Document editions", f'<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Document editions</h1><p class="support-intro">Published alpha editions, retained for reference.</p><ul class="edition-list">{history}</ul></main>', "/legal/", alpha=True))
     support = '''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause help</p><h1>Here to help.</h1>
 <p class="support-intro">Questions about a puzzle, your account, or your privacy? Contact Versava.</p>
-<section class="contact-card"><h2>Email support</h2><a class="contact-email" href="mailto:support@versava.net?subject=Daily%20Pause%20support">support@versava.net</a>
+<section class="contact-card"><h2>Email support</h2><!--email_off--><a class="contact-email" href="mailto:support@versava.net?subject=Daily%20Pause%20support">support@versava.net</a><!--/email_off-->
 <p>For an alpha-build issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account.</p></section>
 <section class="support-section"><h2>Reporting a problem</h2><p>Tell us what you expected and what happened. Screenshots can help; remove unrelated personal information. Do not include passwords, access tokens or payment-card details.</p></section>
 <section class="support-section"><h2>Account and privacy requests</h2><p>Use the same email for access, correction or deletion requests. We may need information to verify account ownership. Signing out, removing the app or leaving TestFlight does not itself delete server-held account records.</p><p><a href="/alpha/privacy/">Read the Alpha Privacy Notice</a></p></section>
