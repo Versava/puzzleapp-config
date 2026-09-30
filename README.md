@@ -26,8 +26,10 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
 Current editions are `2026-09-30-public.1` and `2026-09-30-beta.1`. Published
-`2026-09-30-alpha.1` remains unchanged. The new sets are staged until their
-coordinated deployment is verified. Public policy drafts do not announce a
+`2026-09-30-alpha.1` remains unchanged. Both new sets were published and verified from commit
+`6e794bbe8141b89be4b591be0f52aec36f591b7c` on September 30, 2026: Pages
+deployment `5feef4cd-97bd-4838-9b72-376e548fd0e0` and all 76 public response checks
+passed on the custom domain and Pages host. Public policy drafts do not announce a
 public App Store launch or complete production legal review. Testing pages use
 `noindex, follow`; all documents remain publicly readable. Visiting does not
 accept an app agreement, create an account, or enrol a tester. Acceptance and
@@ -146,16 +148,18 @@ The global security policy permits only same-origin CSS and images in addition
 to its existing `default-src 'none'`, frame and base restrictions. Manifest CORS,
 ETag exposure and cache rules remain unchanged.
 
-For the user-approved active-development difficulty change,
-`development-transition.json` records exact canonical SHA-256 hashes of the
-revision-2 and revision-3 source manifests, the full revision-4 replacement and
-its hash, and the only approved interval: **2026-09-28–2026-12-31**. The publication
-gate checks those exact artifacts, keeps all earlier archive dates fixed, and
-requires subsequent revisions to preserve the entire replacement. It does not
-permit another rewrite, unknown source content or hidden edits. Ordinary
-`validate_extension` remains strict; CI's previous-manifest check explicitly
-uses this acknowledgement. It is source history, not an app-manifest field,
-and is excluded from static hosting output.
+For the owner's explicit September 30 active-development starting-generator reset,
+`development-transition.json` records the exact canonical SHA-256 hashes of all
+prior mainline manifest sources, the full revision-5 `local-v3` replacement and
+its hash, and the approved interval **0001-01-01–2026-12-31**. It requires native
+build 9 and retains the four-of-six selection. The publication gate checks those
+exact artifacts and requires later revisions to preserve the replacement. It
+does not permit an unknown source, changed target or another rewrite. Ordinary
+`validate_extension` remains strict; CI's prior-manifest check explicitly uses
+this acknowledgement. It is source history, not an app-manifest field, and is
+excluded from static hosting output. This generator reset never rewrites frozen
+legal history; issued question snapshots and account values are kept by the
+private account service rather than retaining retired executable generators.
 
 For a calendar extension:
 
