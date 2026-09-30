@@ -1,36 +1,29 @@
 {
   "schemaVersion": 1,
-  "authorizedOn": "2026-09-28",
-  "reason": "Explicitly approved active-development change: randomize each game difficulty from the date seed using a new local-v2 edition. Preserve local-v1 archive dates through 2026-09-27, existing saved attempts, and previously issued reward tickets. This is not a store release or a general permission to rewrite published assignments.",
-  "from": "2026-09-28",
+  "authorizedOn": "2026-09-30",
+  "reason": "Owner explicitly requested removing previous runtime generator versions and using the current generator as the active-development starting baseline. Reset all dated assignments to the sole local-v3 edition with seeded per-game difficulty and build 9. Account balances and permanent whole-day unlocks are retained; issued reward questions are preserved as immutable data for queued proofs. This specific baseline reset does not authorize future rewrites or legal-edition changes.",
+  "from": "0001-01-01",
   "through": "2026-12-31",
   "previousManifestSha256": [
-    "ff5a9ba1bf06de1014e2476b1f5a95af8eba9538dda8073c15079d4f7a93ab1e",
-    "192933b58e9e7256519ff52bc2b0699091382953df08a7ff08fee4cf57efbc64"
+    "192933b58e9e7256519ff52bc2b0699091382953df08a7ff08fee4cf57efbc64",
+    "4ed8d2c1da5cd9231010b9eb02ef6e33ff4942a2500e3144f96210a77bf9c739",
+    "e1379dbf1f0efd1dbeaa3d5800f679153568c64431d6aef8bcc20fc2b10a1e93",
+    "ff5a9ba1bf06de1014e2476b1f5a95af8eba9538dda8073c15079d4f7a93ab1e"
   ],
-  "replacementManifestSha256": "4ed8d2c1da5cd9231010b9eb02ef6e33ff4942a2500e3144f96210a77bf9c739",
+  "replacementManifestSha256": "ac7e8023c0b82733916adba91cde4f4ccf3fcfc7520f9b044d527426cd959aef",
   "replacementManifest": {
     "schemaVersion": 1,
-    "revision": 4,
+    "revision": 5,
     "datePolicy": "device-local",
     "validThrough": "2026-12-31",
     "windows": [
       {
         "from": "0001-01-01",
-        "through": "2026-09-27",
-        "edition": "local-v1",
-        "minBuild": {
-          "ios": 3,
-          "android": 3
-        }
-      },
-      {
-        "from": "2026-09-28",
         "through": "2026-12-31",
-        "edition": "local-v2",
+        "edition": "local-v3",
         "minBuild": {
-          "ios": 4,
-          "android": 4
+          "ios": 9,
+          "android": 9
         }
       }
     ],
@@ -45,20 +38,11 @@
     "selections": [
       {
         "from": "0001-01-01",
-        "through": "2026-09-27",
-        "edition": "daily-mix-v1",
-        "minBuild": {
-          "ios": 3,
-          "android": 3
-        }
-      },
-      {
-        "from": "2026-09-28",
         "through": "2026-12-31",
         "edition": "daily-mix-v1",
         "minBuild": {
-          "ios": 4,
-          "android": 4
+          "ios": 9,
+          "android": 9
         }
       }
     ]

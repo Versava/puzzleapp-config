@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from check_release import check_release
-from legal_site import load_editions, render_document
+from legal_site import FILES, load_editions, render_document
 
 
 class Page(HTMLParser):
@@ -68,7 +68,8 @@ class LegalSiteTests(unittest.TestCase):
             shutil.copyfile(ROOT / name, self.root / name)
         shutil.copytree(ROOT / "legal", self.root / "legal")
         shutil.copytree(ROOT / "scripts", self.root / "scripts")
-        self.edition, self.editions = load_editions(self.root)
+        self.current, self.editions = load_editions(self.root)
+        self.edition = self.current["betaEdition"]
 
     def build(self):
         subprocess.run(
@@ -79,28 +80,37 @@ class LegalSiteTests(unittest.TestCase):
 
     def test_actual_frozen_documents_preserve_all_words_in_every_reading_route(self):
         output = self.build()
-        for kind, filename in (("terms", "terms-alpha.md"), ("privacy", "privacy-alpha.md")):
-            source = (self.root / "legal" / self.edition / filename).read_text()
-            # Source documents contain headings and wrapped plain paragraphs.
-            # Compare independently extracted article text, including punctuation
-            # around links, without website navigation or reading instructions.
-            expected = normalized(re.sub(r"^#{1,3} ", "", source, flags=re.M))
-            for route in (f"alpha/{kind}", kind, f"legal/{self.edition}/{kind}"):
-                with self.subTest(route=route):
-                    page = Page((output / route / "index.html").read_text())
-                    self.assertEqual(normalized("".join(page.article)), expected)
-                    self.assertEqual(len(page.ids), len(set(page.ids)))
+        for edition, (manifest, _) in self.editions.items():
+            channel = manifest["channel"]
+            for kind, filename in FILES[channel].items():
+                source = (self.root / "legal" / edition / filename).read_text()
+                expected = normalized(re.sub(r"^#{1,3} ", "", source, flags=re.M))
+                routes = [f"legal/{edition}/{kind}"]
+                if self.current[f"{channel}Edition"] == edition:
+                    routes.append(kind if channel == "public" else f"{channel}/{kind}")
+                for route in routes:
+                    with self.subTest(route=route):
+                        content = (output / route / "index.html").read_text()
+                        page = Page(content)
+                        self.assertEqual(normalized("".join(page.article)), expected)
+                        self.assertEqual(len(page.ids), len(set(page.ids)))
+                        self.assertIn(f'data-policy-channel="{channel}"', content)
+                        self.assertEqual('content="noindex, follow"' in content, channel != "public")
+                        self.assertIn(f'<title>{source.splitlines()[0][2:]} | Daily Pause</title>', content)
+        # Public URLs are independent agreements, never aliases of test terms.
+        self.assertIn('Daily Pause Terms of Use', (output / "terms/index.html").read_text())
+        self.assertNotIn('data-policy-channel="beta"', (output / "terms/index.html").read_text())
 
     def test_changed_source_is_rejected_before_replacing_previous_output(self):
         output = self.build()
-        previous = (output / "alpha/terms/index.html").read_bytes()
-        path = self.root / "legal" / self.edition / "terms-alpha.md"
+        previous = (output / "beta/terms/index.html").read_bytes()
+        path = self.root / "legal" / self.edition / "terms-beta.md"
         path.write_bytes(path.read_bytes() + b"\nChanged statement.\n")
         with self.assertRaisesRegex(ValueError, "Frozen legal source changed"):
             load_editions(self.root)
         with self.assertRaises(subprocess.CalledProcessError):
             self.build()
-        self.assertEqual((output / "alpha/terms/index.html").read_bytes(), previous)
+        self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")
@@ -111,11 +121,12 @@ class LegalSiteTests(unittest.TestCase):
             "manifest.json", "manifest.schema.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
+            "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html",
         }
-        for edition in self.editions:
+        for edition, (manifest, _) in self.editions.items():
             expected.update(f"legal/{edition}/{name}" for name in (
-                "index.html", "manifest.json", "terms-alpha.md", "privacy-alpha.md",
+                "index.html", "manifest.json", *FILES[manifest["channel"]].values(),
                 "terms/index.html", "privacy/index.html",
             ))
         self.assertEqual(actual, expected)
@@ -174,7 +185,7 @@ class LegalSiteTests(unittest.TestCase):
         git("add", "manifest.json", "legal")
         git("commit", "-q", "-m", "First published edition")
         self.assertEqual(check_release(self.root), 1)
-        source = self.root / "legal" / self.edition / "terms-alpha.md"
+        source = self.root / "legal" / self.edition / "terms-beta.md"
         manifest_path = source.parent / "manifest.json"
         original_source, original_manifest = source.read_bytes(), manifest_path.read_bytes()
         source.write_bytes(original_source + b"\nReplacement statement.\n")

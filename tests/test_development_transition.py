@@ -15,22 +15,17 @@ class DevelopmentTransitionTests(unittest.TestCase):
     def setUp(self):
         self.ack = load_transition(ROOT / "development-transition.json")
         self.current = copy.deepcopy(self.ack["replacementManifest"])
-        self.previous = copy.deepcopy(self.current)
-        self.previous["revision"] = 3
-        self.previous["windows"][-1]["edition"] = "local-v1"
-        self.previous["windows"][-1]["minBuild"] = {"ios": 1, "android": 1}
-        self.previous["selections"][-1]["minBuild"] = {"ios": 2, "android": 2}
+        self.previous = json.loads(
+            (ROOT / "tests/fixtures/development-previous-manifest.json").read_text()
+        )
 
     def test_exact_approved_artifacts_pass_but_normal_extension_stays_strict(self):
         with self.assertRaises(ValueError):
             validate_extension(self.previous, self.current)
         validate_publication(self.previous, self.current, self.ack)
-        revision2 = copy.deepcopy(self.previous)
-        revision2["revision"] = 2
-        revision2["windows"] = revision2["windows"][1:]
-        revision2["selections"] = revision2["selections"][1:]
-        validate_publication(revision2, self.current, self.ack)
-        self.assertEqual(set(self.ack["previousManifestSha256"]), {manifest_hash(self.previous), manifest_hash(revision2)})
+        self.assertIn(manifest_hash(self.previous), self.ack["previousManifestSha256"])
+        self.assertEqual(self.current["windows"][0]["edition"], "local-v3")
+        self.assertEqual(len(self.current["windows"]), 1)
 
     def test_unknown_source_or_changed_target_cannot_use_acknowledgement(self):
         source = copy.deepcopy(self.previous)
@@ -39,24 +34,23 @@ class DevelopmentTransitionTests(unittest.TestCase):
             validate_publication(source, self.current, self.ack)
         for field in ("edition", "minBuild"):
             target = copy.deepcopy(self.current)
-            target["windows"][-1][field] = "local-v3" if field == "edition" else {"ios": 5, "android": 4}
+            target["windows"][-1][field] = "local-v4" if field == "edition" else {"ios": 10, "android": 9}
             with self.assertRaises(ValueError):
                 validate_publication(self.previous, target, self.ack)
 
-    def test_old_archive_dates_remain_protected_even_inside_acknowledgement(self):
+    def test_narrowed_exception_cannot_change_dates_outside_its_interval(self):
         changed = copy.deepcopy(self.ack)
-        changed["replacementManifest"]["windows"][0]["edition"] = "local-v2"
-        changed["replacementManifestSha256"] = manifest_hash(changed["replacementManifest"])
+        changed["from"] = "2026-09-28"
         with self.assertRaisesRegex(ValueError, "outside its approved interval"):
             validate_publication(self.previous, changed["replacementManifest"], changed)
 
     def test_later_extension_works_but_cannot_rewrite_the_acknowledged_release(self):
         extension = copy.deepcopy(self.current)
-        extension["revision"] = 5
+        extension["revision"] = 6
         extension["validThrough"] = "2027-01-01"
-        extension["windows"].append({"from": "2027-01-01", "through": "2027-01-01", "edition": "local-v3", "minBuild": {"ios": 5, "android": 5}})
+        extension["windows"].append({"from": "2027-01-01", "through": "2027-01-01", "edition": "local-v4", "minBuild": {"ios": 10, "android": 10}})
         validate_publication(self.previous, extension, self.ack)
-        extension["windows"][1]["edition"] = "local-v3"
+        extension["windows"][0]["edition"] = "local-v4"
         with self.assertRaises(ValueError):
             validate_publication(self.previous, extension, self.ack)
 

@@ -9,7 +9,7 @@ from validate_manifest import MAX_BYTES, load, load_bytes, require
 from development_transition import load_transition, validate_publication
 
 ROOT = Path(__file__).resolve().parent.parent
-FROZEN_LEGAL = re.compile(r"legal/[a-z0-9][a-z0-9.-]{0,63}/(?:manifest\.json|terms-alpha\.md|privacy-alpha\.md)")
+FROZEN_LEGAL = re.compile(r"legal/[a-z0-9][a-z0-9.-]{0,63}/(?:manifest\.json|(?:terms|privacy)-(?:alpha|beta|public)\.md)")
 
 
 def check_legal_history(root, git, commits):

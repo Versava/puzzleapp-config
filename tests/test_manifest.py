@@ -217,9 +217,9 @@ class BackwardCoverageTests(unittest.TestCase):
     def test_prepend_centuries_keeps_every_existing_effective_assignment(self):
         original = load(ROOT / 'manifest.json')
         previous = copy.deepcopy(original)
-        previous['revision'] = 2
-        previous['windows'] = previous['windows'][1:]
-        previous['selections'] = previous['selections'][1:]
+        previous['revision'] = original['revision'] - 1
+        for field in ('windows', 'selections'):
+            previous[field][0]['from'] = '2026-09-28'
         validate_extension(previous, original)
         for field in ('windows', 'selections'):
             rewritten = copy.deepcopy(original)

@@ -1,4 +1,4 @@
-"""Render public Alpha documents from checksummed, retained Markdown editions."""
+"""Render public and testing documents from checksummed, retained Markdown editions."""
 
 import hashlib
 import html
@@ -8,7 +8,8 @@ import re
 
 
 EDITION = re.compile(r"[a-z0-9][a-z0-9.-]{0,63}")
-FILES = {"terms": "terms-alpha.md", "privacy": "privacy-alpha.md"}
+CHANNELS = ("alpha", "beta", "public")
+FILES = {channel: {kind: f"{kind}-{channel}.md" for kind in ("terms", "privacy")} for channel in CHANNELS}
 HOST = "https://puzzle.versava.net"
 
 
@@ -28,10 +29,12 @@ def read_json(path):
 def load_editions(root):
     legal = root / "legal"
     current = read_json(legal / "current.json")
-    if set(current) != {"schemaVersion", "alphaEdition"} or type(current["schemaVersion"]) is not int or current["schemaVersion"] != 1:
+    if set(current) != {"schemaVersion", *(f"{channel}Edition" for channel in CHANNELS)} or type(current["schemaVersion"]) is not int or current["schemaVersion"] != 2:
         raise ValueError("Invalid current legal edition metadata")
-    if not isinstance(current["alphaEdition"], str) or not EDITION.fullmatch(current["alphaEdition"]):
-        raise ValueError("Invalid Alpha edition identifier")
+    for channel in CHANNELS:
+        value = current[f"{channel}Edition"]
+        if not isinstance(value, str) or not EDITION.fullmatch(value):
+            raise ValueError(f"Invalid {channel} edition identifier")
     editions = {}
     for folder in sorted(legal.iterdir()):
         if not folder.is_dir():
@@ -39,12 +42,15 @@ def load_editions(root):
         if folder.is_symlink() or not EDITION.fullmatch(folder.name):
             raise ValueError("Invalid legal edition directory")
         manifest = read_json(folder / "manifest.json")
-        if set(manifest) != {"schemaVersion", "edition", "channel", "documents"} or type(manifest["schemaVersion"]) is not int or manifest["schemaVersion"] != 1 or manifest["edition"] != folder.name or manifest["channel"] != "alpha":
+        if set(manifest) != {"schemaVersion", "edition", "channel", "documents"} or type(manifest["schemaVersion"]) is not int or manifest["schemaVersion"] != 1 or manifest["edition"] != folder.name or manifest["channel"] not in CHANNELS:
             raise ValueError(f"Invalid legal manifest: {folder.name}")
-        if not isinstance(manifest["documents"], dict) or set(manifest["documents"]) != set(FILES):
-            raise ValueError("Both Alpha documents are required")
+        channel = manifest["channel"]
+        if f"-{channel}." not in folder.name:
+            raise ValueError("Legal edition does not match its channel")
+        if not isinstance(manifest["documents"], dict) or set(manifest["documents"]) != set(FILES[channel]):
+            raise ValueError("Both Terms and Privacy documents are required")
         texts = {}
-        for kind, filename in FILES.items():
+        for kind, filename in FILES[channel].items():
             entry = manifest["documents"][kind]
             if not isinstance(entry, dict) or set(entry) != {"file", "sha256"} or entry["file"] != filename or not isinstance(entry["sha256"], str) or not re.fullmatch(r"[a-f0-9]{64}", entry["sha256"]):
                 raise ValueError(f"Invalid legal source entry: {kind}")
@@ -59,9 +65,11 @@ def load_editions(root):
                 raise ValueError("Legal source edition does not match its manifest")
             texts[kind] = text
         editions[folder.name] = (manifest, texts)
-    if current["alphaEdition"] not in editions:
-        raise ValueError("Current Alpha edition is missing")
-    return current["alphaEdition"], editions
+    for channel in CHANNELS:
+        edition = current[f"{channel}Edition"]
+        if edition not in editions or editions[edition][0]["channel"] != channel:
+            raise ValueError(f"Current {channel} edition is missing or uses another channel")
+    return current, editions
 
 
 def render_document(text):
@@ -131,11 +139,11 @@ def render_pages(root, current, editions):
         raise ValueError("Homepage shared navigation is missing")
     pages = {}
 
-    def page(title, body, path, active=None, alpha=False):
+    def page(title, body, path, active=None, testing=False):
         navigation = header[0]
         if active:
             navigation = navigation.replace(f'href="{active}"', f'href="{active}" aria-current="page"')
-        robots = '<meta name="robots" content="noindex, follow">' if alpha else ""
+        robots = '<meta name="robots" content="noindex, follow">' if testing else ""
         return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} | Daily Pause</title><meta name="description" content="{html.escape(title)} for Daily Pause by Versava Limited.">{robots}
@@ -147,38 +155,51 @@ def render_pages(root, current, editions):
         pages[path.lstrip("/") + "index.html"] = content
 
     for edition, (manifest, texts) in editions.items():
+        channel = manifest["channel"]
+        label = "Public" if channel == "public" else channel.title()
+        testing = channel != "public"
+        historical = channel == "alpha"
+        context = ("Historical Alpha testing documents." if historical else
+                   "For invited Beta testing." if testing else "Public app and website documents.")
         for kind, text in texts.items():
             article, sections = render_document(text)
             title = text.splitlines()[0].removeprefix("# ")
             permanent = f"/legal/{edition}/{kind}/"
             nav = _navigation(sections)
             body = f'''<main id="main" class="document-page page-width">
-<p class="breadcrumb"><a href="/">Daily Pause</a> / Alpha documents</p>
+<p class="breadcrumb"><a href="/">Daily Pause</a> / {label} documents</p>
 <details class="mobile-contents"><summary>On this page</summary>{nav}</details>
 <div class="document-layout"><aside class="contents"><p class="contents-label">On this page</p>{nav}</aside>
-<div><p class="document-status">For invited alpha testing. <a href="{permanent}">Permanent link to this edition</a>.</p>
-<article class="document" data-policy-document="{kind}" aria-label="{html.escape(title)}">{article}</article>
-<div class="document-end"><a href="/support/">Contact support</a><a href="/legal/{edition}/{FILES[kind]}">Save the original text</a><a href="/legal/">Document editions</a><a href="#main">Back to top</a></div>
+<div><p class="document-status">{context} <a href="{permanent}">Permanent link to this edition</a>.</p>
+<article class="document" data-policy-document="{kind}" data-policy-channel="{channel}" aria-label="{html.escape(title)}">{article}</article>
+<div class="document-end"><a href="/support/">Contact support</a><a href="/legal/{edition}/{FILES[channel][kind]}">Save the original text</a><a href="/legal/">Document editions</a><a href="#main">Back to top</a></div>
 </div></div></main>'''
-            add(permanent, page(title, body, permanent, alpha=True))
-            if edition == current:
-                canonical = f"/alpha/{kind}/"
-                for path in (canonical, f"/{kind}/"):
-                    add(path, page(title, body, canonical, active=canonical, alpha=True))
-        edition_body = f'''<main id="main" class="support-page page-width"><p class="eyebrow">Alpha document edition</p><h1>{html.escape(edition)}</h1>
+            add(permanent, page(title, body, permanent, testing=testing))
+            if edition == current[f"{channel}Edition"]:
+                canonical = f"/{kind}/" if channel == "public" else f"/{channel}/{kind}/"
+                add(canonical, page(title, body, canonical, active=canonical, testing=testing))
+        edition_body = f'''<main id="main" class="support-page page-width"><p class="eyebrow">{label} document edition</p><h1>{html.escape(edition)}</h1>
 <p class="support-intro">The retained Terms and Privacy Notice for this edition.</p><ul class="edition-list">
-<li><a href="/legal/{edition}/terms/">Alpha Testing Terms</a></li><li><a href="/legal/{edition}/privacy/">Alpha Privacy Notice</a></li>
+<li><a href="/legal/{edition}/terms/">{html.escape(texts["terms"].splitlines()[0].removeprefix("# "))}</a></li>
+<li><a href="/legal/{edition}/privacy/">{html.escape(texts["privacy"].splitlines()[0].removeprefix("# "))}</a></li>
 <li><a href="/legal/{edition}/manifest.json">Source checksums</a></li></ul><p><a href="/legal/">All editions</a></p></main>'''
-        add(f"/legal/{edition}/", page("Alpha document edition", edition_body, f"/legal/{edition}/", alpha=True))
-    history = "".join(f'<li><a href="/legal/{edition}/">{html.escape(edition)}</a></li>' for edition in reversed(editions))
-    add("/legal/", page("Document editions", f'<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Document editions</h1><p class="support-intro">Published alpha editions, retained for reference.</p><ul class="edition-list">{history}</ul></main>', "/legal/", alpha=True))
+        add(f"/legal/{edition}/", page(f"{label} document edition", edition_body, f"/legal/{edition}/", testing=testing))
+    history = "".join(f'<li><a href="/legal/{edition}/">{html.escape(edition)}</a> · {editions[edition][0]["channel"].title()}</li>' for edition in reversed(editions))
+    add("/legal/", page("Document editions", f'<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Document editions</h1><p class="support-intro">Public and testing editions, retained for reference.</p><ul class="edition-list">{history}</ul></main>', "/legal/", testing=True))
+    beta = '''<main id="main" class="support-page page-width"><p class="eyebrow">Invited testing</p><h1>Daily Pause Beta</h1>
+<p class="support-intro">Daily Pause is currently tested on iPhone through TestFlight. Read the documents for that testing programme.</p>
+<ul class="edition-list"><li><a href="/beta/terms/">Beta Testing Terms</a></li><li><a href="/beta/privacy/">Beta Privacy Notice</a></li></ul>
+<p>Real purchases and publisher ads are disabled. Designated builds may display labelled Google sample ads; sample videos do not grant stars or past-day access.</p>
+<p>Read and accept the testing Terms and acknowledge the Privacy Notice inside the app before starting. Visiting this site does not accept them or enrol you in testing.</p>
+<p><a href="/terms/">Public Terms of Use</a> · <a href="/privacy/">Public Privacy Notice</a> · <a href="/support/">Support</a></p></main>'''
+    add("/beta/", page("Beta testing", beta, "/beta/", active="/beta/", testing=True))
     support = '''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause help</p><h1>Here to help.</h1>
 <p class="support-intro">Questions about a puzzle, your account, or your privacy? Contact Versava.</p>
 <section class="contact-card"><h2>Email support</h2><!--email_off--><a class="contact-email" href="mailto:support@versava.net?subject=Daily%20Pause%20support">support@versava.net</a><!--/email_off-->
-<p>For an alpha-build issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account.</p></section>
+<p>For an app issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account.</p></section>
 <section class="support-section"><h2>Reporting a problem</h2><p>Tell us what you expected and what happened. Screenshots can help; remove unrelated personal information. Do not include passwords, access tokens or payment-card details.</p></section>
-<section class="support-section"><h2>Account and privacy requests</h2><p>Use the same email for access, correction or deletion requests. We may need information to verify account ownership. Signing out, removing the app or leaving TestFlight does not itself delete server-held account records.</p><p><a href="/alpha/privacy/">Read the Alpha Privacy Notice</a></p></section>
-<section class="support-section"><h2>Invited alpha testing</h2><p>Daily Pause is currently tested on iPhone through TestFlight. Real purchases and publisher ads are disabled in the current build.</p><p><a href="/alpha/terms/">Alpha Testing Terms</a> · <a href="/alpha/privacy/">Alpha Privacy Notice</a></p></section>
+<section class="support-section"><h2>Account and privacy requests</h2><p>Use the same email for access, correction or deletion requests. We may need information to verify account ownership. Signing out, removing the app or leaving TestFlight does not itself delete server-held account records.</p><p><a href="/privacy/">Public Privacy Notice</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p></section>
+<section class="support-section"><h2>Invited Beta testing</h2><p>Daily Pause is currently tested on iPhone through TestFlight. Real purchases and publisher ads are disabled. Designated Beta builds can show labelled Google sample ads.</p><p><a href="/beta/terms/">Beta Testing Terms</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p></section>
 <section class="support-section"><h2>Operator</h2><address>Versava Limited<br>Unit 1319, 13/F, One Midtown<br>11 Hoi Shing Road, Tsuen Wan<br>Hong Kong</address></section></main>'''
     add("/support/", page("Support", support, "/support/", active="/support/"))
     return pages
@@ -192,8 +213,8 @@ def build_legal_site(root, output):
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(content, encoding="utf-8")
     sources = ["legal/current.json"]
-    for edition in editions:
-        sources.extend(f"legal/{edition}/{name}" for name in (*FILES.values(), "manifest.json"))
+    for edition, (manifest, _) in editions.items():
+        sources.extend(f"legal/{edition}/{name}" for name in (*FILES[manifest["channel"]].values(), "manifest.json"))
     for relative in sources:
         destination = output / relative
         destination.parent.mkdir(parents=True, exist_ok=True)

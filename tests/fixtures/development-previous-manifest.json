@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "revision": 4,
+  "datePolicy": "device-local",
+  "validThrough": "2026-12-31",
+  "windows": [
+    {
+      "from": "0001-01-01",
+      "through": "2026-09-27",
+      "edition": "local-v1",
+      "minBuild": {
+        "ios": 3,
+        "android": 3
+      }
+    },
+    {
+      "from": "2026-09-28",
+      "through": "2026-12-31",
+      "edition": "local-v2",
+      "minBuild": {
+        "ios": 4,
+        "android": 4
+      }
+    }
+  ],
+  "updates": {
+    "ios": {
+      "url": null
+    },
+    "android": {
+      "url": null
+    }
+  },
+  "selections": [
+    {
+      "from": "0001-01-01",
+      "through": "2026-09-27",
+      "edition": "daily-mix-v1",
+      "minBuild": {
+        "ios": 3,
+        "android": 3
+      }
+    },
+    {
+      "from": "2026-09-28",
+      "through": "2026-12-31",
+      "edition": "daily-mix-v1",
+      "minBuild": {
+        "ios": 4,
+        "android": 4
+      }
+    }
+  ]
+}
