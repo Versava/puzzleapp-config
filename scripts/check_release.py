@@ -3,11 +3,31 @@
 from pathlib import Path
 import subprocess
 import argparse
+import re
 
 from validate_manifest import MAX_BYTES, load, load_bytes, require
 from development_transition import load_transition, validate_publication
 
 ROOT = Path(__file__).resolve().parent.parent
+FROZEN_LEGAL = re.compile(r"legal/[a-z0-9][a-z0-9.-]{0,63}/(?:manifest\.json|terms-alpha\.md|privacy-alpha\.md)")
+
+
+def check_legal_history(root, git, commits):
+    """Retain every committed edition, including its source-hash manifest."""
+    seen = set()
+    for commit in commits:
+        for entry in git("ls-tree", "-r", commit, "--", "legal").decode("utf-8").splitlines():
+            metadata, name = entry.split("\t", 1)
+            if not FROZEN_LEGAL.fullmatch(name):
+                continue
+            mode, kind, object_id = metadata.split()
+            require(mode == "100644" and kind == "blob", "Expected a regular frozen legal source")
+            if (name, object_id) in seen:
+                continue
+            seen.add((name, object_id))
+            current = root / name
+            require(current.is_file() and not current.is_symlink(), f"Retain published legal source: {name}")
+            require(current.read_bytes() == git("cat-file", "blob", object_id), f"Frozen legal edition was rewritten: {name}")
 
 
 def check_release(root=ROOT, baseline_ref=None):
@@ -29,6 +49,8 @@ def check_release(root=ROOT, baseline_ref=None):
         "A complete mainline history is required for publication",
     )
     commits = git("rev-list", "--first-parent", "HEAD").decode("ascii").splitlines()
+    # Generator-development exceptions never exempt legal edition history.
+    check_legal_history(root, git, commits)
     if baseline_ref:
         baseline = git('rev-parse', '--verify', f'{baseline_ref}^{{commit}}').decode('ascii').strip()
         require(baseline in commits, 'Publication baseline must be in first-parent history')

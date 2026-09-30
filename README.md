@@ -1,9 +1,61 @@
-# PuzzleApp public configuration
+# Daily Pause public website and configuration
 
-Public release metadata for PuzzleApp's deterministic, on-device puzzle generators.
+The public information website for Daily Pause and release metadata for its
+deterministic, on-device puzzle generators.
 The application monorepo includes this repository at `public-config/`. The separate
 `puzzleapp-deploy` repository stays private and contains legacy infrastructure
 configuration; none of it belongs in this public repository.
+
+## Website and alpha documents
+
+The website uses the app's paper and sage colours, a shared brand/navigation,
+responsive reading panels, section links, and direct email support. It is static
+HTML, CSS and SVG: no JavaScript, analytics, remote fonts, application backend,
+or additional hosting service is needed. The authenticated content studio is
+separate and is not part of this public site.
+
+| Public route | Content |
+| --- | --- |
+| `/` | Daily Pause introduction and invited-alpha status. |
+| `/alpha/terms/` | Current Alpha Testing Terms. |
+| `/alpha/privacy/` | Current Alpha Privacy Notice. |
+| `/terms/`, `/privacy/` | Clearly identified aliases of the current alpha documents. |
+| `/support/` | Support/privacy contact and company address. |
+| `/legal/` | Available document editions. |
+| `/legal/2026-09-30-alpha.1/terms/`, `/legal/2026-09-30-alpha.1/privacy/` | Permanent edition-specific reading pages. |
+| `/legal/2026-09-30-alpha.1/manifest.json` | Edition identity and exact source SHA-256 pins. |
+
+Only alpha policies currently exist. The current aliases do not create or imply
+approved public-production Terms or Privacy policies. Alpha reading pages use
+`noindex, follow`; they are publicly accessible and are not authentication
+gates. Visiting a page does not accept a policy, create an account, or enrol a
+person in testing. Acceptance and acknowledgement take place inside the app.
+There is no public App Store download button or active paid offer.
+
+`legal/current.json` selects the current alpha edition. Each edition has an
+explicit `manifest.json`, the exact `terms-alpha.md` and `privacy-alpha.md`
+source snapshots, and SHA-256 pins. The builder validates the filenames,
+edition and source hashes before rendering the plain headings, paragraphs
+and lists as escaped HTML. It does not discover or publish unrelated files
+from the application monorepo.
+
+The `2026-09-30-alpha.1` sources match the canonical and shipped Flutter edition:
+
+- Terms: `bc668123fd2b2bac0ef4debca0cb7f7ed929512afb6b33d014b21a18c4af26f4`.
+- Privacy: `9d17637239e6552849c7239c71ee2464ceedc5e49270a7e9355a8de304348589`.
+
+The contact is `support@versava.net`; the operator is Versava Limited at Unit
+1319, 13/F, One Midtown, 11 Hoi Shing Road, Tsuen Wan, Hong Kong. These facts
+come from the owner-approved canonical alpha documents. Policy text is not
+edited independently in this repository.
+
+After an edition is shipped or published, keep its source bytes, hashes and
+permanent links unchanged. For a substantive revision, freeze a new edition
+from the reviewed app sources, add its manifest, and update the current pointer.
+Do not change a hash merely to bypass a source mismatch. In the application
+monorepo, `scripts/local/sync_alpha_legal.py --check --public` checks the exact
+canonical, bundled and public copies; this public repository still builds
+independently without that private checkout.
 
 ## Schedule
 
@@ -81,9 +133,19 @@ mainline manifests from the explicit revision-2 development checkpoint
 `cc8f8ab`. That checkpoint records the approved four-of-six daily settings before
 strict overlap immutability was introduced. All commits since it remain checked,
 including hidden rewrites followed by unrelated commits. Without `--baseline-ref`,
-the gate checks the entire history. The static build copies only `manifest.json`,
-`manifest.schema.json`, `index.html`, `404.html`, and `_headers` to `dist/`.
-No application source, puzzle answers, server functions, or credentials are built.
+the gate checks the entire history. The static build publishes the explicit
+configuration files, public HTML pages, stylesheet, brand SVG and validated
+legal edition resources into `dist/`. No application source, puzzle answers,
+server functions, private deployment files, or credentials are copied. Preview
+the built output locally with:
+
+```sh
+python3 -m http.server 8000 --directory dist
+```
+
+The global security policy permits only same-origin CSS and images in addition
+to its existing `default-src 'none'`, frame and base restrictions. Manifest CORS,
+ETag exposure and cache rules remain unchanged.
 
 For the user-approved active-development difficulty change,
 `development-transition.json` records exact canonical SHA-256 hashes of the

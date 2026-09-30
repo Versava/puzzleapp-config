@@ -5,13 +5,18 @@ from pathlib import Path
 import shutil
 
 from validate_manifest import load
+from legal_site import build_legal_site, load_editions, render_pages
 
 ROOT = Path(__file__).resolve().parent.parent
 load(ROOT / "manifest.json")
+# Validate the legal sources/navigation before replacing the old build output.
+edition, editions = load_editions(ROOT)
+render_pages(ROOT, edition, editions)
 OUTPUT = ROOT / "dist"
 if OUTPUT.exists():
     shutil.rmtree(OUTPUT)
 OUTPUT.mkdir()
-for name in ("manifest.json", "manifest.schema.json", "index.html", "404.html", "_headers"):
+for name in ("manifest.json", "manifest.schema.json", "index.html", "404.html", "_headers", "styles.css", "brand.svg"):
     shutil.copyfile(ROOT / name, OUTPUT / name)
-print(json.dumps({"publishedFiles": sorted(path.name for path in OUTPUT.iterdir())}))
+build_legal_site(ROOT, OUTPUT)
+print(json.dumps({"publishedFiles": sorted(str(path.relative_to(OUTPUT)) for path in OUTPUT.rglob("*") if path.is_file())}))

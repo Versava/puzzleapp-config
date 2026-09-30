@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "edition": "2026-09-30-alpha.1",
+  "channel": "alpha",
+  "documents": {
+    "terms": {
+      "file": "terms-alpha.md",
+      "sha256": "bc668123fd2b2bac0ef4debca0cb7f7ed929512afb6b33d014b21a18c4af26f4"
+    },
+    "privacy": {
+      "file": "privacy-alpha.md",
+      "sha256": "9d17637239e6552849c7239c71ee2464ceedc5e49270a7e9355a8de304348589"
+    }
+  }
+}
