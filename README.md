@@ -1,3 +1,9 @@
+Internal testing uses `/internal/manifest.json` (revision 7 / `local-v5`) and
+`/internal/client-release.json` (minimum iOS build 11). The root configuration
+continues to serve `local-v4` / build 10 for external testers. These are public
+static metadata files; Apple controls membership of the internal TestFlight group.
+The Beta.2 legal snapshot describes the optional Apple-provided player name.
+
 # Daily Pause public website and configuration
 
 The public information website for Daily Pause and release metadata for its
@@ -16,6 +22,7 @@ application server. The authenticated content studio stays separate.
 | Public route | Content |
 | --- | --- |
 | `/` | Daily Pause introduction and current invited Beta status. |
+| `/internal/manifest.json`, `/internal/client-release.json` | Separate internal TestFlight generator reset and client update policy. |
 | `/terms/`, `/privacy/` | Independent public Terms and Privacy Notice, covering the website and public app when available. |
 | `/beta/` | Testing programme information and its two documents. |
 | `/beta/terms/`, `/beta/privacy/` | Current Beta Testing Terms and Privacy Notice. |

@@ -68,6 +68,7 @@ class LegalSiteTests(unittest.TestCase):
             shutil.copyfile(ROOT / name, self.root / name)
         shutil.copytree(ROOT / "legal", self.root / "legal")
         shutil.copytree(ROOT / "scripts", self.root / "scripts")
+        shutil.copytree(ROOT / "internal", self.root / "internal")
         self.current, self.editions = load_editions(self.root)
         self.edition = self.current["betaEdition"]
 
@@ -120,6 +121,7 @@ class LegalSiteTests(unittest.TestCase):
         expected = {
             "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
+            "internal/manifest.json", "internal/client-release.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html",
