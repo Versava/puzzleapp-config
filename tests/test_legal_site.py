@@ -113,6 +113,28 @@ class LegalSiteTests(unittest.TestCase):
             self.build()
         self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
 
+    def test_new_hint_edition_retains_published_beta_two_and_exposes_disabled_checkout(self):
+        previous = self.root / "legal/2026-10-01-beta.2"
+        expected = {
+            "terms-beta.md": "bdeec8d7c9e110507f68532d3aff4afaa2a1b71c9f810b61e1ebede59ab957cc",
+            "privacy-beta.md": "9b927248cfa17148fe67b695fc2a39048887d8e9cca9bce65508256dd4d94238",
+        }
+        for name, checksum in expected.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        self.assertEqual(self.edition, "2026-10-01-beta.3")
+        output = self.build()
+        current = (output / "beta/terms/index.html").read_text()
+        old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
+        self.assertIn("2026-10-01-beta.3", current)
+        self.assertIn("2026-10-01-beta.2", old)
+        self.assertNotIn("Each puzzle question allows at most three hints", old)
+        self.assertIn("Each puzzle question allows at most three hints", current)
+        for route in ("beta", "support"):
+            status = (output / route / "index.html").read_text()
+            self.assertIn("Remove Ads checkout is disabled", status)
+            self.assertIn("without real charges", status)
+            self.assertNotIn("Real purchases and publisher ads are disabled.", status)
+
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")
         (self.root / "legal" / self.edition / "unreviewed-internal.txt").write_text("Not a policy.")
