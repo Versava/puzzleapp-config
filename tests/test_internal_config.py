@@ -17,8 +17,8 @@ class InternalConfigurationTests(unittest.TestCase):
         internal_policy = load_release(ROOT / "internal/client-release.json")
         self.assertEqual(public["windows"][0]["edition"], "local-v4")
         self.assertEqual(public_policy["ios"]["minimumBuild"], 10)
-        self.assertEqual(internal_policy["ios"]["latestBuild"], 11)
-        self.assertEqual(internal_policy["ios"]["minimumBuild"], 11)
+        self.assertEqual(internal_policy["ios"]["latestBuild"], 12)
+        self.assertEqual(internal_policy["ios"]["minimumBuild"], 12)
         self.assertEqual(internal["windows"], [{
             "from": "0001-01-01", "through": "2026-12-31",
             "edition": "local-v5", "minBuild": {"ios": 11, "android": 11},

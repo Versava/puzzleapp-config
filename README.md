@@ -1,8 +1,8 @@
 Internal testing uses `/internal/manifest.json` (revision 7 / `local-v5`) and
-`/internal/client-release.json` (minimum iOS build 11). The root configuration
+`/internal/client-release.json` (policy revision 3, minimum/latest iOS build 12). The root configuration
 continues to serve `local-v4` / build 10 for external testers. These are public
 static metadata files; Apple controls membership of the internal TestFlight group.
-The Beta.2 legal snapshot describes the optional Apple-provided player name.
+Internal build 0.1.0 (12) is Testing in Daily Pause Team before this requirement is published. The current Beta.3 legal snapshot describes paid hint allowances and the prepared permanent Remove Ads product; checkout and publisher ads remain disabled.
 
 # Daily Pause public website and configuration
 
@@ -32,7 +32,7 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current editions are `2026-09-30-public.1` and `2026-10-01-beta.1`. The October 1 Beta edition is published from commit `d005305`, covering support codes, optional nicknames and guest/account switching. Earlier Beta sources remain immutable. The following September 30 record is retained history. Published
+Current editions are `2026-09-30-public.1` and `2026-10-01-beta.3`. The October 1 Beta.3 edition is published from commit `fce420d`, covering hint allowances and the prepared permanent Remove Ads product. Earlier Beta.1 and Beta.2 editions covered support codes, account switching and the optional Apple-provided player name. Earlier Beta sources remain immutable. The following September 30 record is retained history. Published
 `2026-09-30-alpha.1` remains unchanged. Both new sets were published and verified from commit
 `6e794bbe8141b89be4b591be0f52aec36f591b7c` on September 30, 2026: Pages
 deployment `5feef4cd-97bd-4838-9b72-376e548fd0e0` and all 76 public response checks
