@@ -25,7 +25,7 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current editions are `2026-09-30-public.1` and `2026-09-30-beta.1`. Published
+Current editions are `2026-09-30-public.1` and `2026-10-01-beta.1`. The October 1 Beta edition is published from commit `d005305`, covering support codes, optional nicknames and guest/account switching. Earlier Beta sources remain immutable. The following September 30 record is retained history. Published
 `2026-09-30-alpha.1` remains unchanged. Both new sets were published and verified from commit
 `6e794bbe8141b89be4b591be0f52aec36f591b7c` on September 30, 2026: Pages
 deployment `5feef4cd-97bd-4838-9b72-376e548fd0e0` and all 76 public response checks
@@ -60,25 +60,34 @@ This public repository builds independently without the private checkout.
 
 ## Schedule
 
-Published `manifest.json` revision 4 covers **0001-01-01 through 2026-12-31**.
-It preserves `local-v1` through September 27 and uses `local-v2` from September 28;
-both use the frozen `daily-mix-v1` selection of four games from the six-game pool.
-In `local-v2`, each date and game independently selects easy, medium or hard from
-a deterministic seed. The selected game kinds remain unchanged. Archive days
-are generated only when selected; this repository contains no level files.
+`manifest.json` revision 6 covers **0001-01-01 through 2026-12-31** with
+`local-v4` and frozen `daily-mix-v2`, requiring native build 10. Four games are
+selected from the eight-game pool, and each selected game's Easy/Medium/Hard
+profile is independently seeded. Archived days generate lazily on the phone;
+this public repository contains no puzzle levels or generator implementation.
+The explicit October 1 Beta archive reset replaces older daily runtime editions;
+existing account balances, whole-day ownership and issued question snapshots stay.
 
-**0001-01-01 through 2026-09-27** retains its exact recipe and minimum build 3.
-**2026-09-28 through 2026-12-31** now requires build 4 under the explicit
-development acknowledgement below. Existing attempts retain their exact
-snapshots. The account service retains all 285 prior releases for old tickets
-beside 95 new selected releases; existing account balances and grants are unchanged.
+Native **0.1.0 (10)** is available in the existing internal and external TestFlight
+groups before this higher metadata requirement is published. The iOS update URL
+is the authorised public TestFlight join page. There is no public App Store launch
+or Android release. Static metadata never installs executable generator code.
 
-Build `0.1.0+1` understands the base schedule, `0.1.0+2` the daily mix, and
-`0.1.0+4` the new difficulty edition and bundled baseline. Older clients continue
-to reject rewritten assignments during refresh; a native app update supplies
-the new baseline. PuzzleApp is not released in stores, so both store URLs remain
-`null`. Static metadata never installs executable code. Compatible store builds
-must precede new editions once public store releases exist.
+## Client version policy
+
+`client-release.json` independently declares the latest/minimum supported native
+version and build, policy revision and approved store/TestFlight update URL.
+The initial policy selects iOS **0.1.0 (10)** and leaves Android unset. New native
+clients check it before the legal gate and app bootstrap, then again on resume.
+An older supported installation receives a required-update page. Same/newer builds
+may continue. Existing binaries without that gate cannot receive it retroactively.
+
+The client validates strict shape and numeric versions, bounds downloads to
+16 KiB with a five-second timeout, rejects redirects/unapproved URLs and keeps a
+monotonic validated cache. Offline startup uses the valid cache or bundled policy.
+The JSON is public metadata with short freshness/revalidation; it contains no
+credentials or account data. Publish a higher requirement only after the intended
+audience can install the update. Web development is exempt from native enforcement.
 
 ## Manifest contract
 
@@ -91,7 +100,7 @@ must precede new editions once public store releases exist.
 | `windows` | Ordered, contiguous, inclusive date ranges with `edition` and platform `minBuild`. |
 | `selections` | Optional ordered, nonoverlapping windows selecting a frozen daily game mix and platform `minBuild`. |
 | `additions` | Optional ordered, nonoverlapping windows within base coverage, with separately versioned extra games and platform `minBuild`. |
-| `updates` | Optional official App Store / Google Play HTTPS URLs; `null` before release. |
+| `updates` | Optional approved App Store / Google Play or canonical TestFlight HTTPS URLs. |
 
 Dates use the proleptic Gregorian calendar, years 0001–9999. Manifests are limited
 to 256 KiB and 128 base windows; integer fields use positive signed 32-bit values. Selections and legacy additions each have a 128-window limit; gaps are allowed between these optional windows. Unknown fields, duplicate keys, base

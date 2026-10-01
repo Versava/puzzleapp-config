@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
-  "revision": 5,
+  "revision": 6,
   "datePolicy": "device-local",
   "validThrough": "2026-12-31",
   "windows": [
     {
       "from": "0001-01-01",
       "through": "2026-12-31",
-      "edition": "local-v3",
+      "edition": "local-v4",
       "minBuild": {
-        "ios": 9,
-        "android": 9
+        "ios": 10,
+        "android": 10
       }
     }
   ],
   "updates": {
     "ios": {
-      "url": null
+      "url": "https://testflight.apple.com/join/CCCawA1Q"
     },
     "android": {
       "url": null
@@ -26,10 +26,10 @@
     {
       "from": "0001-01-01",
       "through": "2026-12-31",
-      "edition": "daily-mix-v1",
+      "edition": "daily-mix-v2",
       "minBuild": {
-        "ios": 9,
-        "android": 9
+        "ios": 10,
+        "android": 10
       }
     }
   ]

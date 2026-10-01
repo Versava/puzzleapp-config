@@ -84,6 +84,25 @@ class ManifestTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 validate(new)
 
+    def test_beta_testflight_links_use_canonical_apple_invite_path(self):
+        good = "https://testflight.apple.com/join/CCCawA1Q"
+        valid = copy.deepcopy(self.original)
+        valid['updates']['ios']['url'] = good
+        validate(valid)
+        schema = json.loads((ROOT / 'manifest.schema.json').read_text())
+        pattern = schema['properties']['updates']['properties']['ios']['properties']['url']['pattern']
+        self.assertIsNotNone(re.search(pattern, good))
+        for url in ("http://testflight.apple.com/join/CCCawA1Q", "https://testflight.apple.com.evil.invalid/join/CCCawA1Q", "https://user@testflight.apple.com/join/CCCawA1Q", "https://testflight.apple.com:444/join/CCCawA1Q", "https://testflight.apple.com/join/short", "https://testflight.apple.com/foo/CCCawA1Q", "https://testflight.apple.com/join/CCCawA1Q?redirect=evil", "https://testflight.apple.com/join/CCCawA1Q#fragment"):
+            invalid = copy.deepcopy(valid)
+            invalid['updates']['ios']['url'] = url
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                validate(invalid)
+            self.assertIsNone(re.search(pattern, url))
+        valid['updates']['ios']['url'] = None
+        valid['updates']['android']['url'] = good
+        with self.assertRaises(ValueError):
+            validate(valid)
+
     def test_store_link_host_cannot_be_spoofed(self):
         for url in ("https://apps.apple.com.attacker.invalid/app", "https://user@apps.apple.com/app", "http://apps.apple.com/app", "https://apps.apple.com:444/app"):
             new = copy.deepcopy(self.original)

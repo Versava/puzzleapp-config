@@ -62,7 +62,7 @@ class LegalSiteTests(unittest.TestCase):
         self.root = Path(temporary.name) / "source"
         self.root.mkdir()
         for name in (
-            "manifest.json", "manifest.schema.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg",
         ):
             shutil.copyfile(ROOT / name, self.root / name)
@@ -118,7 +118,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         actual = {str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()}
         expected = {
-            "manifest.json", "manifest.schema.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",

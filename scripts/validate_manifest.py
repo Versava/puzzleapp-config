@@ -76,7 +76,8 @@ def validate(value):
         if update["url"] is not None:
             require(isinstance(update["url"], str) and len(update["url"]) <= 2048, "Invalid store URL")
             url = urlsplit(update["url"])
-            require(url.scheme == "https" and url.hostname == host and url.username is None and url.password is None and url.port in (None, 443), "Expected official HTTPS store URL")
+            official = url.hostname == host or (platform == "ios" and url.hostname == "testflight.apple.com" and re.fullmatch(r"/join/[a-zA-Z0-9]{8}", url.path) and not url.query and not url.fragment and '?' not in update['url'] and '#' not in update['url'])
+            require(url.scheme == "https" and official and url.username is None and url.password is None and url.port in (None, 443), "Expected official HTTPS store URL")
     return value
 
 

@@ -1,35 +1,36 @@
 {
   "schemaVersion": 1,
-  "authorizedOn": "2026-09-30",
-  "reason": "Owner explicitly requested removing previous runtime generator versions and using the current generator as the active-development starting baseline. Reset all dated assignments to the sole local-v3 edition with seeded per-game difficulty and build 9. Account balances and permanent whole-day unlocks are retained; issued reward questions are preserved as immutable data for queued proofs. This specific baseline reset does not authorize future rewrites or legal-edition changes.",
+  "authorizedOn": "2026-10-01",
+  "reason": "Owner explicitly authorized resetting the historical archive for Beta while adding Number Trail and Light Up. Reset all dated assignments to local-v4 with daily-mix-v2 and minimum build 10. Account balances and permanent day unlocks stay; already-issued reward questions remain immutable for queued proofs. This exact Beta reset does not authorize future rewrites or legal-edition changes.",
   "from": "0001-01-01",
   "through": "2026-12-31",
   "previousManifestSha256": [
     "192933b58e9e7256519ff52bc2b0699091382953df08a7ff08fee4cf57efbc64",
     "4ed8d2c1da5cd9231010b9eb02ef6e33ff4942a2500e3144f96210a77bf9c739",
     "e1379dbf1f0efd1dbeaa3d5800f679153568c64431d6aef8bcc20fc2b10a1e93",
-    "ff5a9ba1bf06de1014e2476b1f5a95af8eba9538dda8073c15079d4f7a93ab1e"
+    "ff5a9ba1bf06de1014e2476b1f5a95af8eba9538dda8073c15079d4f7a93ab1e",
+    "ac7e8023c0b82733916adba91cde4f4ccf3fcfc7520f9b044d527426cd959aef"
   ],
-  "replacementManifestSha256": "ac7e8023c0b82733916adba91cde4f4ccf3fcfc7520f9b044d527426cd959aef",
+  "replacementManifestSha256": "d7fbe77d2a6e10eded4399435cec4df0eb5bef4ec109a2febfcb78049d460199",
   "replacementManifest": {
     "schemaVersion": 1,
-    "revision": 5,
+    "revision": 6,
     "datePolicy": "device-local",
     "validThrough": "2026-12-31",
     "windows": [
       {
         "from": "0001-01-01",
         "through": "2026-12-31",
-        "edition": "local-v3",
+        "edition": "local-v4",
         "minBuild": {
-          "ios": 9,
-          "android": 9
+          "ios": 10,
+          "android": 10
         }
       }
     ],
     "updates": {
       "ios": {
-        "url": null
+        "url": "https://testflight.apple.com/join/CCCawA1Q"
       },
       "android": {
         "url": null
@@ -39,10 +40,10 @@
       {
         "from": "0001-01-01",
         "through": "2026-12-31",
-        "edition": "daily-mix-v1",
+        "edition": "daily-mix-v2",
         "minBuild": {
-          "ios": 9,
-          "android": 9
+          "ios": 10,
+          "android": 10
         }
       }
     ]

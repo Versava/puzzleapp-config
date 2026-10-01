@@ -103,7 +103,7 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^https://apps\\.apple\\.com(?::443)?(?:[/?#]|$)"
+              "pattern": "^https://(?:apps\\.apple\\.com(?::443)?(?:[/?#]|$)|testflight\\.apple\\.com(?::443)?/join/[a-zA-Z0-9]{8}$)"
             }
           }
         },
