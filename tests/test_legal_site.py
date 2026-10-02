@@ -113,7 +113,7 @@ class LegalSiteTests(unittest.TestCase):
             self.build()
         self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
 
-    def test_new_hint_edition_retains_published_beta_two_and_exposes_disabled_checkout(self):
+    def test_current_currency_edition_retains_beta_two_and_exposes_disabled_checkout(self):
         previous = self.root / "legal/2026-10-01-beta.2"
         expected = {
             "terms-beta.md": "bdeec8d7c9e110507f68532d3aff4afaa2a1b71c9f810b61e1ebede59ab957cc",
@@ -121,11 +121,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-01-beta.3")
+        self.assertEqual(self.edition, "2026-10-02-beta.4")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-01-beta.3", current)
+        self.assertIn("2026-10-02-beta.4", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each puzzle question allows at most three hints", current)
@@ -134,6 +134,27 @@ class LegalSiteTests(unittest.TestCase):
             self.assertIn("Remove Ads checkout is disabled", status)
             self.assertIn("without real charges", status)
             self.assertNotIn("Real purchases and publisher ads are disabled.", status)
+
+    def test_currency_edition_retains_beta_three_and_discloses_new_records(self):
+        previous = self.root / "legal/2026-10-01-beta.3"
+        expected = {
+            "terms-beta.md": "8556c88ece2dd479114c34377c52499f421cb8b7a41e77d2000edfcd40846478",
+            "privacy-beta.md": "1b9fa4ea7a0cafcecea0ddbd8110354e9d86ff2cd1041888077cd2dea133e8f1",
+        }
+        for name, checksum in expected.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        historical = (output / "legal/2026-10-01-beta.3/terms/index.html").read_text()
+        self.assertIn("one diamond for each group of 14 consecutive", terms)
+        self.assertIn("one confirmed diamond for 50 stars", terms)
+        self.assertIn("20-star unlock", terms)
+        self.assertIn("Currency checkout is also disabled", terms)
+        self.assertIn("verified completed puzzle dates", privacy)
+        self.assertIn("signed Apple transaction evidence", privacy)
+        self.assertIn("Keychain delivery journal", privacy)
+        self.assertNotIn("one diamond for each group of 14 consecutive", historical)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")

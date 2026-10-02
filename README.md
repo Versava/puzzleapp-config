@@ -41,7 +41,16 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current editions are `2026-09-30-public.1` and `2026-10-01-beta.3`. The October 1 Beta.3 edition is published from commit `fce420d`, covering hint allowances and the prepared permanent Remove Ads product. Earlier Beta.1 and Beta.2 editions covered support codes, account switching and the optional Apple-provided player name. Earlier Beta sources remain immutable. The following September 30 record is retained history. Published
+Current source editions are `2026-09-30-public.1` and `2026-10-02-beta.4`.
+Beta.4 accompanies the build-15 candidate: verified completed-date diamond chains,
+the 50-star exchange, frozen First Steps packs, and account-bound currency
+delivery/retry records. Currency and other checkout remain disabled. The hosted
+root/internal client policies still identify build 14; publishing legal text does
+not require an unavailable native update. The October 1 Beta.3 edition was
+published from commit `fce420d`, covering hint allowances and the prepared
+permanent Remove Ads product. Earlier Beta.1 and Beta.2 editions covered support
+codes, account switching and the optional Apple-provided player name. All earlier
+Beta sources remain immutable. The following September 30 record is retained history. Published
 `2026-09-30-alpha.1` remains unchanged. Both new sets were published and verified from commit
 `6e794bbe8141b89be4b591be0f52aec36f591b7c` on September 30, 2026: Pages
 deployment `5feef4cd-97bd-4838-9b72-376e548fd0e0` and all 76 public response checks
