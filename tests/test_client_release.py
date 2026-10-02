@@ -13,13 +13,14 @@ class ClientReleaseTest(unittest.TestCase):
 
     def test_current_beta_policy(self):
         self.assertEqual(self.policy["ios"]["latestVersion"], "0.1.0")
-        self.assertEqual(self.policy["ios"]["latestBuild"], 10)
+        self.assertEqual(self.policy["revision"], 2)
+        self.assertEqual(self.policy["ios"]["latestBuild"], 13)
         self.assertEqual(self.policy["ios"]["minimumBuild"], 10)
         self.assertIsNone(self.policy["android"])
 
     def test_minimum_cannot_exceed_latest(self):
         value = copy.deepcopy(self.policy)
-        value["ios"]["minimumBuild"] = 11
+        value["ios"]["minimumBuild"] = value["ios"]["latestBuild"] + 1
         with self.assertRaises(ValueError):
             validate(value)
 

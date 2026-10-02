@@ -10,13 +10,17 @@ from validate_client_release import load as load_release
 
 
 class InternalConfigurationTests(unittest.TestCase):
-    def test_internal_generator_reset_does_not_require_external_testers_to_upgrade(self):
+    def test_external_client_update_preserves_generator_channels(self):
         public = load_manifest(ROOT / "manifest.json")
         internal = load_manifest(ROOT / "internal/manifest.json")
         public_policy = load_release(ROOT / "client-release.json")
         internal_policy = load_release(ROOT / "internal/client-release.json")
+        self.assertEqual(public["revision"], 6)
         self.assertEqual(public["windows"][0]["edition"], "local-v4")
+        self.assertEqual(public_policy["revision"], 2)
+        self.assertEqual(public_policy["ios"]["latestBuild"], 13)
         self.assertEqual(public_policy["ios"]["minimumBuild"], 10)
+        self.assertEqual(internal_policy["revision"], 4)
         self.assertEqual(internal_policy["ios"]["latestBuild"], 13)
         self.assertEqual(internal_policy["ios"]["minimumBuild"], 13)
         self.assertEqual(internal["windows"], [{

@@ -1,8 +1,17 @@
-Internal testing uses `/internal/manifest.json` (revision 8 / `local-v6`) and
-`/internal/client-release.json` (policy revision 4, minimum/latest iOS build 13). The root configuration
-continues to serve `local-v4` / build 10 for external testers. These are public
-static metadata files; Apple controls membership of the internal TestFlight group.
-Publish this requirement only after internal build 0.1.0 (13) is Testing in Daily Pause Team. V6 adds 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions retain their original edition. `/internal/manifest-v5.json` preserves the previous revision-7 assignment for reproducible validation; it is not the current client channel. The current Beta.3 legal snapshot is unchanged; checkout and publisher ads remain disabled.
+Native build **0.1.0 (13)** is Testing in both the internal Daily Pause Team and
+external Daily Pause Beta groups. That binary uses `/internal/manifest.json`
+(revision 8 / `local-v6`) and `/internal/client-release.json` (policy revision 4,
+latest/minimum build 13), regardless of tester group. The root client policy is
+revision 2, latest build 13 and minimum build 10; online clients on older builds
+receive the existing required-update screen. The root generator manifest remains
+revision 6 / `local-v4`, preserving the previous build-10 schedule. These are
+public static metadata files; Apple controls membership of the TestFlight groups.
+
+V6 adds 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions
+retain their original edition. `/internal/manifest-v5.json` preserves the previous
+revision-7 assignment for reproducible validation; it is not the current client
+channel. The current Beta.3 legal snapshot is unchanged; checkout and publisher
+ads remain disabled.
 
 # Daily Pause public website and configuration
 
@@ -75,23 +84,33 @@ this public repository contains no puzzle levels or generator implementation.
 The explicit October 1 Beta archive reset replaces older daily runtime editions;
 existing account balances, whole-day ownership and issued question snapshots stay.
 
-Native **0.1.0 (10)** is available in the existing internal and external TestFlight
-groups before this higher metadata requirement is published. The iOS update URL
-is the authorised public TestFlight join page. There is no public App Store launch
+Native **0.1.0 (13)** is available to both internal and external TestFlight
+testers before its latest-build policy is published. Its bundled configuration
+and explicit metadata URLs select `local-v6`; keeping the root generator manifest
+at `local-v4` does not change that binary's daily generator. The iOS update URL is
+the authorised public TestFlight join page. There is no public App Store launch
 or Android release. Static metadata never installs executable generator code.
 
 ## Client version policy
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-The initial policy selects iOS **0.1.0 (10)** and leaves Android unset. New native
-clients check it before the legal gate and app bootstrap, then again on resume.
-An older supported installation receives a required-update page. Same/newer builds
-may continue. Existing binaries without that gate cannot receive it retroactively.
+The root policy revision 2 selects latest iOS **0.1.0 (13)**, retains minimum
+**0.1.0 (10)** and leaves Android unset. Native clients check it before the legal
+gate and app bootstrap, then again on resume. The shipped gate compares the
+installed version against `latest`, so builds below 13 receive a required-update
+page even when they meet `minimum`. Same/newer builds may continue. Existing
+binaries without that gate cannot receive it retroactively.
 
 The client validates strict shape and numeric versions, bounds downloads to
 16 KiB with a five-second timeout, rejects redirects/unapproved URLs and keeps a
-monotonic validated cache. Offline startup uses the valid cache or bundled policy.
+monotonic validated cache. Offline startup uses the valid cache or bundled policy,
+and a cached higher latest build can still require an update offline. A higher
+policy revision cannot lower a previously known latest or minimum requirement;
+lowering the internal minimum in a new revision would not relax devices that
+already cached revision 4. A seven-day offline grace period and adoption of a new
+generator on the next device-local day are proposed for a future binary; neither
+is implemented in build 13 or enabled by this minimum-build value.
 The JSON is public metadata with short freshness/revalidation; it contains no
 credentials or account data. Publish a higher requirement only after the intended
 audience can install the update. Web development is exempt from native enforcement.
