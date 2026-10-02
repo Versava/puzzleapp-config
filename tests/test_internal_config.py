@@ -17,17 +17,21 @@ class InternalConfigurationTests(unittest.TestCase):
         internal_policy = load_release(ROOT / "internal/client-release.json")
         self.assertEqual(public["windows"][0]["edition"], "local-v4")
         self.assertEqual(public_policy["ios"]["minimumBuild"], 10)
-        self.assertEqual(internal_policy["ios"]["latestBuild"], 12)
-        self.assertEqual(internal_policy["ios"]["minimumBuild"], 12)
+        self.assertEqual(internal_policy["ios"]["latestBuild"], 13)
+        self.assertEqual(internal_policy["ios"]["minimumBuild"], 13)
         self.assertEqual(internal["windows"], [{
             "from": "0001-01-01", "through": "2026-12-31",
-            "edition": "local-v5", "minBuild": {"ios": 11, "android": 11},
+            "edition": "local-v6", "minBuild": {"ios": 13, "android": 13},
         }])
         self.assertEqual(internal["selections"][0]["edition"], "daily-mix-v2")
+        retained = load_manifest(ROOT / "internal/manifest-v5.json")
+        self.assertEqual(retained["revision"], 7)
+        self.assertEqual(retained["windows"][0]["edition"], "local-v5")
+        self.assertEqual(retained["windows"][0]["minBuild"]["ios"], 11)
 
     def test_internal_metadata_contains_configuration_only(self):
         actual = {p.name for p in (ROOT / "internal").iterdir() if p.is_file()}
-        self.assertEqual(actual, {"manifest.json", "client-release.json"})
+        self.assertEqual(actual, {"manifest.json", "manifest-v5.json", "client-release.json"})
         for filename in actual:
             text = (ROOT / "internal" / filename).read_text()
             self.assertIsInstance(json.loads(text), dict)

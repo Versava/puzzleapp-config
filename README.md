@@ -1,8 +1,8 @@
-Internal testing uses `/internal/manifest.json` (revision 7 / `local-v5`) and
-`/internal/client-release.json` (policy revision 3, minimum/latest iOS build 12). The root configuration
+Internal testing uses `/internal/manifest.json` (revision 8 / `local-v6`) and
+`/internal/client-release.json` (policy revision 4, minimum/latest iOS build 13). The root configuration
 continues to serve `local-v4` / build 10 for external testers. These are public
 static metadata files; Apple controls membership of the internal TestFlight group.
-Internal build 0.1.0 (12) is Testing in Daily Pause Team before this requirement is published. The current Beta.3 legal snapshot describes paid hint allowances and the prepared permanent Remove Ads product; checkout and publisher ads remain disabled.
+Publish this requirement only after internal build 0.1.0 (13) is Testing in Daily Pause Team. V6 adds 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions retain their original edition. `/internal/manifest-v5.json` preserves the previous revision-7 assignment for reproducible validation; it is not the current client channel. The current Beta.3 legal snapshot is unchanged; checkout and publisher ads remain disabled.
 
 # Daily Pause public website and configuration
 

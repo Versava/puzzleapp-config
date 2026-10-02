@@ -143,7 +143,7 @@ class LegalSiteTests(unittest.TestCase):
         expected = {
             "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
-            "internal/manifest.json", "internal/client-release.json",
+            "internal/manifest.json", "internal/manifest-v5.json", "internal/client-release.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html",
