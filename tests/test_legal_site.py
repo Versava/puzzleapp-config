@@ -121,11 +121,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-02-beta.4")
+        self.assertEqual(self.edition, "2026-10-03-beta.5")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-02-beta.4", current)
+        self.assertIn("2026-10-03-beta.5", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each puzzle question allows at most three hints", current)
@@ -149,12 +149,39 @@ class LegalSiteTests(unittest.TestCase):
         historical = (output / "legal/2026-10-01-beta.3/terms/index.html").read_text()
         self.assertIn("one diamond for each group of 14 consecutive", terms)
         self.assertIn("one confirmed diamond for 50 stars", terms)
-        self.assertIn("20-star unlock", terms)
+        self.assertIn("96 released packs", terms)
         self.assertIn("Currency checkout is also disabled", terms)
         self.assertIn("verified completed puzzle dates", privacy)
         self.assertIn("signed Apple transaction evidence", privacy)
         self.assertIn("Keychain delivery journal", privacy)
         self.assertNotIn("one diamond for each group of 14 consecutive", historical)
+
+    def test_pack_offer_edition_retains_beta_four_and_matches_current_redemption_records(self):
+        previous = self.root / "legal/2026-10-02-beta.4"
+        expected = {
+            "terms-beta.md": "0ab65d34db4af55b773031dc3f6cc20cfb759cbe5a22d1025448ffbc679484c6",
+            "privacy-beta.md": "cb63c74a4d4b0295fc4254869c8ad9be77483a4ccdfc4f7b8b6a2e439fb8a69d",
+            "manifest.json": "a155232ffe59eb2ed054e18f3abf58276bf3fb35f5353806d9eb01d3198f2cab",
+        }
+        for name, checksum in expected.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
+        self.assertIn("2026-10-03-beta.5", terms)
+        self.assertIn("96 released packs across eight games", terms)
+        self.assertIn("for 50 stars or one diamond", terms)
+        self.assertIn("for 100 stars or two diamonds", terms)
+        self.assertIn("for 150 stars or three diamonds", terms)
+        self.assertIn("rejects a changed revision or price", terms)
+        self.assertIn("confirmed offer revision", privacy)
+        self.assertIn("corresponding diamond ledger debit", privacy)
+        self.assertIn("selected pack sort order is saved in device preferences", privacy)
+        self.assertIn("This presentation setting is not sent to our account service", privacy)
+        self.assertNotIn("Direct diamond pack prices are not configured", terms)
+        self.assertIn("20-star unlock", historical)
+        self.assertIn("Direct diamond pack prices are not configured", historical)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")

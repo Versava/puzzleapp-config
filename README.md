@@ -10,7 +10,7 @@ public static metadata files; Apple controls membership of the TestFlight groups
 V6 adds 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions
 retain their original edition. `/internal/manifest-v5.json` preserves the previous
 revision-7 assignment for reproducible validation; it is not the current client
-channel. The current Beta.3 legal snapshot is unchanged; checkout and publisher
+channel. The retained build-14 Beta.3 legal snapshot is unchanged; checkout and publisher
 ads remain disabled.
 
 # Daily Pause public website and configuration
@@ -41,8 +41,15 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-02-beta.4`.
-Beta.4 accompanies the build-15 candidate: verified completed-date diamond chains,
+Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.5`.
+Beta.5 accompanies the build-17 candidate and corrects the factual pack-offer
+status: 96 immutable 120-level packs, current 50/100/150-star or 1/2/3-diamond
+prices, confirmed offer checks, preserved permanent grants, pack ledger records
+and device-only sorting preferences. Cash checkout and publisher ads remain
+disabled. It does not change client-version or generator metadata. Earlier
+published editions stay byte-for-byte unchanged.
+
+The retained Beta.4 accompanied builds 15 and 16: verified completed-date diamond chains,
 the 50-star exchange, frozen First Steps packs, and account-bound currency
 delivery/retry records. Currency and other checkout remain disabled. The hosted
 root/internal client policies still identify build 14; publishing legal text does
