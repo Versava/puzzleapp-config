@@ -13,8 +13,8 @@ class ClientReleaseTest(unittest.TestCase):
 
     def test_current_beta_policy(self):
         self.assertEqual(self.policy["ios"]["latestVersion"], "0.1.0")
-        self.assertEqual(self.policy["revision"], 2)
-        self.assertEqual(self.policy["ios"]["latestBuild"], 13)
+        self.assertEqual(self.policy["revision"], 3)
+        self.assertEqual(self.policy["ios"]["latestBuild"], 14)
         self.assertEqual(self.policy["ios"]["minimumBuild"], 10)
         self.assertIsNone(self.policy["android"])
 

@@ -1,8 +1,8 @@
-Native build **0.1.0 (13)** is Testing in both the internal Daily Pause Team and
+Native build **0.1.0 (14)** is Testing in both the internal Daily Pause Team and
 external Daily Pause Beta groups. That binary uses `/internal/manifest.json`
-(revision 8 / `local-v6`) and `/internal/client-release.json` (policy revision 4,
-latest/minimum build 13), regardless of tester group. The root client policy is
-revision 2, latest build 13 and minimum build 10; online clients on older builds
+(revision 8 / `local-v6`) and `/internal/client-release.json` (policy revision 5,
+latest/minimum build 14), regardless of tester group. The root client policy is
+revision 3, latest build 14 and minimum build 10; online clients on older builds
 receive the existing required-update screen. The root generator manifest remains
 revision 6 / `local-v4`, preserving the previous build-10 schedule. These are
 public static metadata files; Apple controls membership of the TestFlight groups.
@@ -84,7 +84,7 @@ this public repository contains no puzzle levels or generator implementation.
 The explicit October 1 Beta archive reset replaces older daily runtime editions;
 existing account balances, whole-day ownership and issued question snapshots stay.
 
-Native **0.1.0 (13)** is available to both internal and external TestFlight
+Native **0.1.0 (14)** is available to both internal and external TestFlight
 testers before its latest-build policy is published. Its bundled configuration
 and explicit metadata URLs select `local-v6`; keeping the root generator manifest
 at `local-v4` does not change that binary's daily generator. The iOS update URL is
@@ -95,10 +95,10 @@ or Android release. Static metadata never installs executable generator code.
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-The root policy revision 2 selects latest iOS **0.1.0 (13)**, retains minimum
+The root policy revision 3 selects latest iOS **0.1.0 (14)**, retains minimum
 **0.1.0 (10)** and leaves Android unset. Native clients check it before the legal
 gate and app bootstrap, then again on resume. The shipped gate compares the
-installed version against `latest`, so builds below 13 receive a required-update
+installed version against `latest`, so builds below 14 receive a required-update
 page even when they meet `minimum`. Same/newer builds may continue. Existing
 binaries without that gate cannot receive it retroactively.
 
@@ -108,9 +108,9 @@ monotonic validated cache. Offline startup uses the valid cache or bundled polic
 and a cached higher latest build can still require an update offline. A higher
 policy revision cannot lower a previously known latest or minimum requirement;
 lowering the internal minimum in a new revision would not relax devices that
-already cached revision 4. A seven-day offline grace period and adoption of a new
+already cached revision 5. A seven-day offline grace period and adoption of a new
 generator on the next device-local day are proposed for a future binary; neither
-is implemented in build 13 or enabled by this minimum-build value.
+is implemented in build 14 or enabled by this minimum-build value.
 The JSON is public metadata with short freshness/revalidation; it contains no
 credentials or account data. Publish a higher requirement only after the intended
 audience can install the update. Web development is exempt from native enforcement.
