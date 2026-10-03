@@ -121,11 +121,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.5")
+        self.assertEqual(self.edition, "2026-10-03-beta.6")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.5", current)
+        self.assertIn("2026-10-03-beta.6", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each puzzle question allows at most three hints", current)
@@ -150,7 +150,7 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("one diamond for each group of 14 consecutive", terms)
         self.assertIn("one confirmed diamond for 50 stars", terms)
         self.assertIn("96 released packs", terms)
-        self.assertIn("Currency checkout is also disabled", terms)
+        self.assertIn("Currency, individual cash-pack and Remove Ads checkout remain disabled", terms)
         self.assertIn("verified completed puzzle dates", privacy)
         self.assertIn("signed Apple transaction evidence", privacy)
         self.assertIn("Keychain delivery journal", privacy)
@@ -169,7 +169,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.5", terms)
+        self.assertIn("2026-10-03-beta.6", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("for 50 stars or one diamond", terms)
         self.assertIn("for 100 stars or two diamonds", terms)
@@ -182,6 +182,29 @@ class LegalSiteTests(unittest.TestCase):
         self.assertNotIn("Direct diamond pack prices are not configured", terms)
         self.assertIn("20-star unlock", historical)
         self.assertIn("Direct diamond pack prices are not configured", historical)
+
+    def test_subscription_edition_retains_beta_five_and_limits_testing_to_sandbox(self):
+        previous = self.root / "legal/2026-10-03-beta.5"
+        expected = {
+            "terms-beta.md": "245637d97c1bafddedf5ab3c7b01e13b719f7b0b0737a52613210b7bf8767db4",
+            "privacy-beta.md": "d5ab43536b847939239837bbe8ac2d4588604e09f1aae54fc3a2362c6220c04c",
+            "manifest.json": "bd618c11a0fbee65eb148bde7f7c549226a002de9faf9ced621fe7a8129db52d",
+        }
+        for name, checksum in expected.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        self.assertIn("controlled testing of the monthly Daily Pause Plus", terms)
+        self.assertIn("without charging real money", terms)
+        self.assertIn("all offered packs, Past daily puzzles", terms)
+        self.assertIn("Plus does not grant permanent pack ownership", terms)
+        self.assertIn("an ordinary restore does not override a refund", terms)
+        self.assertIn("refund-reversal evidence", privacy)
+        self.assertIn("does not guarantee recovery of every missed provider notification", privacy)
+        historical = normalized((output / "legal/2026-10-03-beta.5/terms/index.html").read_text())
+        self.assertIn("The Beta does not enrol you in a paid subscription", historical)
+        self.assertNotIn("controlled testing of the monthly Daily Pause Plus", historical)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")
