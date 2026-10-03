@@ -1,10 +1,11 @@
-Native build **0.1.0 (21)** is Testing in both the internal Daily Pause Team
+Native build **0.1.0 (22)** is Testing in both the internal Daily Pause Team
 (one tester/one build) and external Daily Pause Beta groups (five testers/one
-build). The former build 14 group membership was removed only after 21 became
-available; its immutable delivery history remains. Both hosted client policies
-are revision 13, latest/minimum 21, with the existing authorised TestFlight join
+build). The former build 21 membership was removed from both groups only after 22
+became available; immutable delivery history and binaries remain. Both hosted
+client policies
+are revision 15, latest/minimum 22, with the existing authorised TestFlight join
 URL. This is invited Beta version metadata; no public App Store 1.0 release.
-Build 21 uses the unchanged `/internal/manifest.json` revision 8 / `local-v6` and
+Build 22 uses the unchanged `/internal/manifest.json` revision 8 / `local-v6` and
 `daily-mix-v2`; the root generator schedule remains revision 6 / `local-v4`.
 All generator date assignments, legal editions and offers are unchanged by this
 policy publication. Apple controls actual tester membership and installations.
@@ -148,7 +149,7 @@ this public repository contains no puzzle levels or generator implementation.
 The explicit October 1 Beta archive reset replaces older daily runtime editions;
 existing account balances, whole-day ownership and issued question snapshots stay.
 
-Native **0.1.0 (14)** is available to both internal and external TestFlight
+Native **0.1.0 (22)** is available to both internal and external TestFlight
 testers before its latest-build policy is published. Its bundled configuration
 and explicit metadata URLs select `local-v6`; keeping the root generator manifest
 at `local-v4` does not change that binary's daily generator. The iOS update URL is
@@ -159,9 +160,9 @@ or Android release. Static metadata never installs executable generator code.
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-Both root and internal policy revision 13 select latest/minimum iOS
-**0.1.0 (21)** and leave Android unset. Revision 13 is a monotonic successor to
-build 21's bundled revision 12 and prior hosted revisions 3/5. Native clients check
+Both root and internal policy revision 15 select latest/minimum iOS
+**0.1.0 (22)** and leave Android unset. Revision 15 is a monotonic successor to
+build 22's bundled revision 14 and prior hosted revision 13. Native clients check
 before the legal gate/app bootstrap and again on resume. The shipped gate
 compares the installed version against `latest`, so older known clients receive
 the required-update page; same/newer builds may continue. Existing binaries

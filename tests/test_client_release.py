@@ -13,9 +13,9 @@ class ClientReleaseTest(unittest.TestCase):
 
     def test_current_beta_policy(self):
         self.assertEqual(self.policy["ios"]["latestVersion"], "0.1.0")
-        self.assertEqual(self.policy["revision"], 13)
-        self.assertEqual(self.policy["ios"]["latestBuild"], 21)
-        self.assertEqual(self.policy["ios"]["minimumBuild"], 21)
+        self.assertEqual(self.policy["revision"], 15)
+        self.assertEqual(self.policy["ios"]["latestBuild"], 22)
+        self.assertEqual(self.policy["ios"]["minimumBuild"], 22)
         self.assertIsNone(self.policy["android"])
 
     def test_minimum_cannot_exceed_latest(self):
