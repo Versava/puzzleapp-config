@@ -1,17 +1,19 @@
-Native build **0.1.0 (14)** is Testing in both the internal Daily Pause Team and
-external Daily Pause Beta groups. That binary uses `/internal/manifest.json`
-(revision 8 / `local-v6`) and `/internal/client-release.json` (policy revision 5,
-latest/minimum build 14), regardless of tester group. The root client policy is
-revision 3, latest build 14 and minimum build 10; online clients on older builds
-receive the existing required-update screen. The root generator manifest remains
-revision 6 / `local-v4`, preserving the previous build-10 schedule. These are
-public static metadata files; Apple controls membership of the TestFlight groups.
+Native build **0.1.0 (21)** is Testing in both the internal Daily Pause Team
+(one tester/one build) and external Daily Pause Beta groups (five testers/one
+build). The former build 14 group membership was removed only after 21 became
+available; its immutable delivery history remains. Both hosted client policies
+are revision 13, latest/minimum 21, with the existing authorised TestFlight join
+URL. This is invited Beta version metadata; no public App Store 1.0 release.
+Build 21 uses the unchanged `/internal/manifest.json` revision 8 / `local-v6` and
+`daily-mix-v2`; the root generator schedule remains revision 6 / `local-v4`.
+All generator date assignments, legal editions and offers are unchanged by this
+policy publication. Apple controls actual tester membership and installations.
 
-V6 adds 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions
-retain their original edition. `/internal/manifest-v5.json` preserves the previous
-revision-7 assignment for reproducible validation; it is not the current client
-channel. The retained build-14 Beta.3 legal snapshot is unchanged; checkout and publisher
-ads remain disabled.
+V6 retains 5×5 Easy, 10×10 Medium and 15×15 Hard Picture Logic. Started questions
+retain their original edition. `/internal/manifest-v5.json` remains a retained
+revision 7 schedule. Signed purchases and rewards stay subject to their separate
+Sandbox/server gates; publishing version metadata does not enable checkout or
+publisher ads.
 
 # Daily Pause public website and configuration
 
@@ -145,12 +147,13 @@ or Android release. Static metadata never installs executable generator code.
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-The root policy revision 3 selects latest iOS **0.1.0 (14)**, retains minimum
-**0.1.0 (10)** and leaves Android unset. Native clients check it before the legal
-gate and app bootstrap, then again on resume. The shipped gate compares the
-installed version against `latest`, so builds below 14 receive a required-update
-page even when they meet `minimum`. Same/newer builds may continue. Existing
-binaries without that gate cannot receive it retroactively.
+Both root and internal policy revision 13 select latest/minimum iOS
+**0.1.0 (21)** and leave Android unset. Revision 13 is a monotonic successor to
+build 21's bundled revision 12 and prior hosted revisions 3/5. Native clients check
+before the legal gate/app bootstrap and again on resume. The shipped gate
+compares the installed version against `latest`, so older known clients receive
+the required-update page; same/newer builds may continue. Existing binaries
+without this gate cannot receive it retroactively.
 
 The client validates strict shape and numeric versions, bounds downloads to
 16 KiB with a five-second timeout, rejects redirects/unapproved URLs and keeps a
@@ -158,9 +161,21 @@ monotonic validated cache. Offline startup uses the valid cache or bundled polic
 and a cached higher latest build can still require an update offline. A higher
 policy revision cannot lower a previously known latest or minimum requirement;
 lowering the internal minimum in a new revision would not relax devices that
-already cached revision 5. A seven-day offline grace period and adoption of a new
-generator on the next device-local day are proposed for a future binary; neither
-is implemented in build 14 or enabled by this minimum-build value.
+already cached a higher policy. This strict schema has no timed-grace fields;
+the minimum-build value does not enable offline grace.
+
+Offline reward authorization is separate. The current server issues
+account/question-bound tickets for UTC yesterday, today and the next six dates
+when trusted questions exist. Each ticket is redeemable from its puzzle date's
+UTC midnight until eight days later: the puzzle date plus seven days of grace.
+Previously issued unexpired tickets retain their original questions across
+generator changes, and account/date reward caps prevent duplicate credits.
+The phone needs a matching ticket to queue eligible pending stars; completion
+alone is not spendable currency. A cached higher client policy can still block
+an older app offline despite an unexpired ticket. These protections do not
+implement the requested per-phone generator adoption journal, next-local-day
+activation or seven-day update handover. Those require a coordinated binary and
+service change; this publication changes neither tickets nor generators.
 The JSON is public metadata with short freshness/revalidation; it contains no
 credentials or account data. Publish a higher requirement only after the intended
 audience can install the update. Web development is exempt from native enforcement.
