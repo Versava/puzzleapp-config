@@ -121,11 +121,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.6")
+        self.assertEqual(self.edition, "2026-10-03-beta.7")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.6", current)
+        self.assertIn("2026-10-03-beta.7", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each puzzle question allows at most three hints", current)
@@ -147,8 +147,8 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = (output / "legal/2026-10-01-beta.3/terms/index.html").read_text()
-        self.assertIn("one diamond for each group of 14 consecutive", terms)
-        self.assertIn("one confirmed diamond for 50 stars", terms)
+        self.assertIn("ten new diamonds for each group of seven", terms)
+        self.assertIn("one confirmed new diamond for one star", terms)
         self.assertIn("96 released packs", terms)
         self.assertIn("Currency, individual cash-pack and Remove Ads checkout remain disabled", terms)
         self.assertIn("verified completed puzzle dates", privacy)
@@ -169,11 +169,11 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.6", terms)
+        self.assertIn("2026-10-03-beta.7", terms)
         self.assertIn("96 released packs across eight games", terms)
-        self.assertIn("for 50 stars or one diamond", terms)
-        self.assertIn("for 100 stars or two diamonds", terms)
-        self.assertIn("for 150 stars or three diamonds", terms)
+        self.assertIn("for 50 stars or 20 new diamonds", terms)
+        self.assertIn("for 100 stars or 50 new diamonds", terms)
+        self.assertIn("for 150 stars or 90 new diamonds", terms)
         self.assertIn("rejects a changed revision or price", terms)
         self.assertIn("confirmed offer revision", privacy)
         self.assertIn("corresponding diamond ledger debit", privacy)
@@ -197,14 +197,42 @@ class LegalSiteTests(unittest.TestCase):
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         self.assertIn("controlled testing of the monthly Daily Pause Plus", terms)
         self.assertIn("without charging real money", terms)
-        self.assertIn("all offered packs, Past daily puzzles", terms)
-        self.assertIn("Plus does not grant permanent pack ownership", terms)
-        self.assertIn("an ordinary restore does not override a refund", terms)
+        self.assertIn("two new diamonds for each eligible UTC calendar date", terms)
+        self.assertIn("does not include all-pack access", terms)
+        self.assertIn("An ordinary restore does not override a refund", terms)
         self.assertIn("refund-reversal evidence", privacy)
         self.assertIn("does not guarantee recovery of every missed provider notification", privacy)
         historical = normalized((output / "legal/2026-10-03-beta.5/terms/index.html").read_text())
         self.assertIn("The Beta does not enrol you in a paid subscription", historical)
         self.assertNotIn("controlled testing of the monthly Daily Pause Plus", historical)
+
+    def test_banked_diamond_edition_retains_beta_six_and_separates_free_paid_claims(self):
+        previous = self.root / "legal/2026-10-03-beta.6"
+        expected = {
+            "terms-beta.md": "0e199264015cf0705dffdd43172e0511c151efffec69d9ab96da53ef837da2b7",
+            "privacy-beta.md": "c4a63dc5b1e00487fc0c65eb6d90ef5abfb66d4da2bc1f5a687a26b1e83c2e4d",
+            "manifest.json": "239edfd2a9ca83397f6a1008e857a24b9c92e0803f12c426546f6be4d67d658c",
+        }
+        for name, checksum in expected.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        self.assertIn("2026-10-03-beta.7", terms)
+        self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
+        self.assertIn("manual claim of one free star", terms)
+        self.assertIn("An unclaimed free daily star expires", terms)
+        self.assertIn("net.versava.puzzleapp.plus_diamonds_monthly", terms)
+        self.assertIn("two new diamonds for each eligible UTC calendar date", terms)
+        self.assertIn("Missed dates do not expire", terms)
+        self.assertIn("does not forfeit the banked allowance", terms)
+        self.assertIn("does not include all-pack access, Past access, automatic-ad removal", terms)
+        self.assertIn("audited adjustment adds nine times the existing confirmed balance", privacy)
+        self.assertIn("a manual claim can collect unclaimed covered dates", privacy.lower())
+        historical = normalized((output / "legal/2026-10-03-beta.6/terms/index.html").read_text())
+        self.assertIn("all offered packs, Past daily puzzles", historical)
+        self.assertIn("for 50 stars or one diamond", historical)
+        self.assertNotIn("plus_diamonds_monthly", historical)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")
