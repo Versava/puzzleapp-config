@@ -434,6 +434,12 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("New Plus diamond eligibility starts on the next UTC date", support)
         self.assertIn("Fasangartenstr 102, 81549 München", support)
         self.assertIn("privacy@versava.net", support)
+        support_source = (output / "support/index.html").read_text()
+        self.assertIn(
+            '<!--email_off--><h2>Account and privacy requests</h2>',
+            support_source,
+        )
+        self.assertIn('href="mailto:privacy@versava.net"', support_source)
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
