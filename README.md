@@ -37,6 +37,7 @@ application server. The authenticated content studio stays separate.
 | `/beta/terms/`, `/beta/privacy/` | Current Beta Testing Terms and Privacy Notice. |
 | `/alpha/terms/`, `/alpha/privacy/` | Historical Alpha edition, with original source and title. |
 | `/support/` | Support/privacy contact and company address. |
+| `/app-ads.txt` | Exact direct Google seller declaration copied from the owned AdMob account. |
 | `/legal/` | Retained public and testing editions. |
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
@@ -258,6 +259,21 @@ A static Pages project needs no EC2, database, or runtime API. The matching buil
 The manifest is public and uses a five-minute HTTP cache lifetime, public CORS,
 and ETags supplied by the host. Native clients use conditional requests. Browser
 clients must work without requiring a custom server for preflight requests.
+
+## AdMob seller declaration
+
+`app-ads.txt` contains only the exact direct Google publisher declaration copied
+from the owned AdMob console. The static build checks its regular-file identity,
+bounded ASCII syntax and publisher before copying its bytes, and rejects invalid
+source before replacing existing output. It is served as `text/plain` with short
+revalidation. The seller row is public metadata, not a credential.
+
+This file does not enable publisher ads or verify the app for serving. Daily
+Pause still needs its public App Store Marketing URL (Developer Website), linked
+store listing, Google crawl/verification/readiness review, applicable published
+consent message and native reward verification. TestFlight is separate. No
+puzzle generator, client-version policy, legal edition, account or economic
+record changes with this declaration. [Google setup guidance](https://support.google.com/admob/answer/9363762?hl=en).
 
 ## Publication boundary
 

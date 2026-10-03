@@ -66,6 +66,8 @@ class LegalSiteTests(unittest.TestCase):
             "_headers", "styles.css", "brand.svg",
         ):
             shutil.copyfile(ROOT / name, self.root / name)
+        if (ROOT / "app-ads.txt").is_file():
+            shutil.copyfile(ROOT / "app-ads.txt", self.root / "app-ads.txt")
         shutil.copytree(ROOT / "legal", self.root / "legal")
         shutil.copytree(ROOT / "scripts", self.root / "scripts")
         shutil.copytree(ROOT / "internal", self.root / "internal")
@@ -109,6 +111,24 @@ class LegalSiteTests(unittest.TestCase):
         path.write_bytes(path.read_bytes() + b"\nChanged statement.\n")
         with self.assertRaisesRegex(ValueError, "Frozen legal source changed"):
             load_editions(self.root)
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.build()
+        self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
+
+    def test_reviewed_seller_source_is_copied_as_exact_plain_text(self):
+        source = b"google.com, pub-8798981282479093, DIRECT\n"
+        (self.root / "app-ads.txt").write_bytes(source)
+        output = self.build()
+        self.assertEqual((output / "app-ads.txt").read_bytes(), source)
+        self.assertIn(
+            "/app-ads.txt\n  Content-Type: text/plain; charset=utf-8",
+            (output / "_headers").read_text(),
+        )
+
+    def test_unreviewed_seller_fails_before_replacing_previous_output(self):
+        output = self.build()
+        previous = (output / "beta/terms/index.html").read_bytes()
+        (self.root / "app-ads.txt").write_bytes(b"<html>Unreviewed seller</html>\n")
         with self.assertRaises(subprocess.CalledProcessError):
             self.build()
         self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
@@ -270,6 +290,8 @@ class LegalSiteTests(unittest.TestCase):
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html",
         }
+        if (ROOT / "app-ads.txt").is_file():
+            expected.add("app-ads.txt")
         for edition, (manifest, _) in self.editions.items():
             expected.update(f"legal/{edition}/{name}" for name in (
                 "index.html", "manifest.json", *FILES[manifest["channel"]].values(),
