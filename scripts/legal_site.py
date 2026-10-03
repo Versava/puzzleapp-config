@@ -80,7 +80,9 @@ def render_document(text):
 
     def inline(value):
         escaped = html.escape(value)
-        return escaped.replace("support@versava.net", '<!--email_off--><a href="mailto:support@versava.net">support@versava.net</a><!--/email_off-->')
+        for address in ("support@versava.net", "privacy@versava.net"):
+            escaped = escaped.replace(address, f'<!--email_off--><a href="mailto:{address}">{address}</a><!--/email_off-->')
+        return escaped
 
     def flush():
         if paragraph:

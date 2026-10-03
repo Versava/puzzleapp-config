@@ -419,6 +419,10 @@ class LegalSiteTests(unittest.TestCase):
                 self.assertIn("CHOI, Chong Hing", privacy)
                 self.assertIn("Fasangartenstr 102, 81549 München", privacy)
                 self.assertIn("privacy@versava.net", privacy)
+                self.assertIn(
+                    '<!--email_off--><a href="mailto:privacy@versava.net">privacy@versava.net</a><!--/email_off-->',
+                    (output / f"{route}privacy/index.html").read_text(),
+                )
                 self.assertIn("Bundle value €29.99", terms)
                 self.assertIn("not the subscription charge", terms)
                 self.assertNotIn("There is currently no automatic account-deletion control", privacy)
