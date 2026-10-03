@@ -41,7 +41,23 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.5`.
+Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.8`.
+Beta.8 prepares internal native build 20: hints after the third cost one diamond,
+new diamond-to-star conversion is unavailable, and active verified Plus directly
+covers the eligible capped daily bonus, selected supported Past-day unlocks and
+hints two and three. Banked paid daily diamonds remain separate. Designated
+Sandbox builds may test supported star/diamond consumables; production purchases,
+individual cash-pack and Remove Ads checkout, and publisher ads remain disabled.
+The displayed Bundle value €29.99 is a configured label, while Subscribe shows
+the actual localized Apple price. Physical-device purchase acceptance remains
+pending. Prior legal editions are retained unchanged. Publication of this legal
+edition does not publish a required native update: root and shared internal
+client policies still identify build 14, preserving external tester access.
+The build-20 candidate's bundled policy revision 11 is separate; its proposed
+hosted policy remains private until native availability and channel isolation
+are verified. Generator metadata and public legal sources are unchanged.
+
+The following Beta.5 record is retained history.
 Beta.5 accompanies the build-17 candidate and corrects the factual pack-offer
 status: 96 immutable 120-level packs, current 50/100/150-star or 1/2/3-diamond
 prices, confirmed offer checks, preserved permanent grants, pack ledger records
