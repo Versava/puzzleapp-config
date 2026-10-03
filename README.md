@@ -42,7 +42,18 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.8`.
+Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.9`.
+Beta.9 prepares the next native bundle with one required quoted pack price:
+stars, diamonds or a mandatory combination. Both amounts are required together
+for a combined unlock; insufficient currency creates no grant or partial debit.
+Designated Sandbox builds may test the one-time Remove Ads product when their
+separate controls permit it. Production purchases, individual cash-pack tests
+and publisher ads remain disabled. Existing build 20 uses immutable Beta.8 and
+keeps Remove Ads testing disabled; publication does not enable an old client's
+checkout, accept legal terms or make a new native build available. Public legal,
+client policies, generator metadata and prior legal editions remain unchanged.
+
+The following Beta.8 record is retained history.
 Beta.8 prepares internal native build 20: hints after the third cost one diamond,
 new diamond-to-star conversion is unavailable, and active verified Plus directly
 covers the eligible capped daily bonus, selected supported Past-day unlocks and

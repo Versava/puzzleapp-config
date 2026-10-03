@@ -141,17 +141,18 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.8")
+        self.assertEqual(self.edition, "2026-10-03-beta.9")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.8", current)
+        self.assertIn("2026-10-03-beta.9", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each further hint costs one new diamond", current)
         for route in ("beta", "support"):
             status = (output / route / "index.html").read_text()
-            self.assertIn("Remove Ads checkout is disabled", status)
+            self.assertIn("one-time Remove Ads product", status)
+            self.assertIn("Production Remove Ads checkout remains disabled", status)
             self.assertIn("without real charges", status)
             self.assertNotIn("Real purchases and publisher ads are disabled.", status)
 
@@ -170,7 +171,7 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("ten new diamonds for each group of seven", terms)
         self.assertIn("New diamond-to-star exchanges are unavailable", terms)
         self.assertIn("96 released packs", terms)
-        self.assertIn("Individual cash-pack and Remove Ads checkout remain disabled", terms)
+        self.assertIn("Individual cash-pack checkout remains disabled", terms)
         self.assertIn("verified completed puzzle dates", privacy)
         self.assertIn("signed Apple transaction evidence", privacy)
         self.assertIn("Keychain delivery journal", privacy)
@@ -189,14 +190,14 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.8", terms)
+        self.assertIn("2026-10-03-beta.9", terms)
         self.assertIn("96 released packs across eight games", terms)
-        self.assertIn("for 50 stars or 20 new diamonds", terms)
-        self.assertIn("for 100 stars or 50 new diamonds", terms)
-        self.assertIn("for 150 stars or 90 new diamonds", terms)
-        self.assertIn("rejects a changed revision or price", terms)
+        self.assertIn("Each pack has one required price", terms)
+        self.assertIn("A combined price requires both displayed amounts", terms)
+        self.assertIn("charges neither amount", terms)
+        self.assertIn("rejects a changed offer", terms)
         self.assertIn("confirmed offer revision", privacy)
-        self.assertIn("corresponding diamond ledger debit", privacy)
+        self.assertIn("A combined grant creates both wallet debits in the same transaction", privacy)
         self.assertIn("selected pack sort order is saved in device preferences", privacy)
         self.assertIn("This presentation setting is not sent to our account service", privacy)
         self.assertNotIn("Direct diamond pack prices are not configured", terms)
@@ -238,7 +239,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.8", terms)
+        self.assertIn("2026-10-03-beta.9", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -276,6 +277,28 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("Each puzzle question allows at most three hints", old)
         self.assertIn("one confirmed new diamond for one star", old)
         self.assertNotIn("Each further hint costs one new diamond", old)
+
+    def test_fixed_price_edition_retains_beta_eight_and_separates_remove_ads_sandbox(self):
+        previous = self.root / "legal/2026-10-03-beta.8"
+        for name, checksum in {
+            "terms-beta.md": "72f79c2bed44f6adcba9521243f47feafe9d99539807f89dff0d98f0348d2b40",
+            "privacy-beta.md": "17c26bb3291f9cb52a12ec791515a5373a939503efb06dbba7cfa961f6eef436",
+        }.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        self.assertIn("2026-10-03-beta.9", terms)
+        self.assertIn("A combined price requires both displayed amounts", terms)
+        self.assertIn("grants nothing and charges neither amount", terms)
+        self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
+        self.assertIn("Production Remove Ads checkout remains disabled", terms)
+        self.assertIn("applicable currency version and a retry reference", privacy)
+        self.assertIn("this does not enable publisher ads", privacy)
+        old = normalized((output / "legal/2026-10-03-beta.8/terms/index.html").read_text())
+        self.assertIn("for 50 stars or 20 new diamonds", old)
+        self.assertIn("Individual cash-pack and Remove Ads checkout remain disabled", old)
+        self.assertNotIn("A combined price requires both displayed amounts", old)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")
