@@ -44,7 +44,19 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.10`.
+Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.11`.
+Beta.11 prepares designated TestFlight publisher banners and optional rewarded
+videos under separate advertising controls. Requests remain non-personalised;
+Google UMP supplies applicable consent/refusal and required privacy options.
+Account-bound reward tickets and signed Google callbacks gate the capped daily
+star bonus, selected Past-day unlock and hints two/three. Sample videos never
+grant benefits. Verified Remove Ads suppresses automatic placements; current
+Plus can provide eligible rewarded benefits directly. Production paid checkout
+and public App Store release remain disabled. Publication of this legal edition
+does not enable ads, accept an agreement, or ship a native build. Client policies
+remain revision 13/latest-minimum 21 and generator schedules remain unchanged.
+
+The following Beta.10 and Beta.9 records are retained history.
 Beta.10 adds the designated included-bonus currency totals: 50/200/500 stars
 and 10/40/100 diamonds. German examples remain €1.99/€4.99/€9.99; actual
 localized Apple prices and displayed totals govern checkout. A bonus is included

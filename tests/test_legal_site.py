@@ -141,11 +141,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.10")
+        self.assertEqual(self.edition, "2026-10-03-beta.11")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.10", current)
+        self.assertIn("2026-10-03-beta.11", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each further hint costs one new diamond", current)
@@ -190,7 +190,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.10", terms)
+        self.assertIn("2026-10-03-beta.11", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("Each pack has one required price", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
@@ -239,7 +239,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.10", terms)
+        self.assertIn("2026-10-03-beta.11", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -288,13 +288,13 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.10", terms)
+        self.assertIn("2026-10-03-beta.11", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
         self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
         self.assertIn("Production Remove Ads checkout remains disabled", terms)
         self.assertIn("applicable currency version and a retry reference", privacy)
-        self.assertIn("this does not enable publisher ads", privacy)
+        self.assertIn("Ad-serving controls are separate from purchase controls", privacy)
         old = normalized((output / "legal/2026-10-03-beta.8/terms/index.html").read_text())
         self.assertIn("for 50 stars or 20 new diamonds", old)
         self.assertIn("Individual cash-pack and Remove Ads checkout remain disabled", old)
@@ -342,6 +342,38 @@ class LegalSiteTests(unittest.TestCase):
                 "terms/index.html", "privacy/index.html",
             ))
         self.assertEqual(actual, expected)
+
+    def test_publisher_beta_edition_retains_beta_ten_and_discloses_consent_and_scoped_rewards(self):
+        previous = self.root / "legal/2026-10-03-beta.10"
+        for name, checksum in {
+            "terms-beta.md": "295ea1d1d5951bdbe333eeb4993760617518d9ecbe0748d23dc4e6de8e73778e",
+            "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
+        }.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        self.assertEqual(self.edition, "2026-10-03-beta.11")
+        output = self.build()
+        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        self.assertIn("publisher banner ads", terms)
+        self.assertIn("optional rewarded videos", terms)
+        self.assertIn("Production paid purchases, paid pack checkout and Production paid subscriptions remain disabled", terms)
+        self.assertIn("consent and refusal choices", privacy)
+        self.assertIn("non-personalised ads", privacy)
+        self.assertIn("does not request Apple's cross-app tracking permission", privacy)
+        self.assertIn("Ad privacy options in the Store", privacy)
+        self.assertIn("Google's signed completion callback", privacy)
+        self.assertIn("random, scoped reward reference", privacy)
+        self.assertIn("does not contain your Apple name", privacy)
+        self.assertIn("Banner views do not earn currency", privacy)
+        self.assertIn("A sample video does not credit spendable stars", privacy)
+        self.assertNotIn("Publisher advertising and real ad-funded rewards are disabled", privacy)
+        for route in ("beta", "support"):
+            status = normalized((output / route / "index.html").read_text())
+            self.assertIn("publisher banners", status)
+            self.assertIn("consent and refusal flow", status)
+            self.assertNotIn("subscriptions and publisher ads remain disabled", status)
+        historical = normalized((output / "legal/2026-10-03-beta.10/privacy/index.html").read_text())
+        self.assertIn("Publisher advertising and real ad-funded rewards are disabled", historical)
 
     def test_source_html_is_text_and_cannot_introduce_script_or_event_handlers(self):
         source = '# Notice <script>alert("x")</script>\n\n<script>alert("x")</script>\n<img src=x onerror="alert(1)">\n'
