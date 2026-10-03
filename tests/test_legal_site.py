@@ -141,11 +141,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.9")
+        self.assertEqual(self.edition, "2026-10-03-beta.10")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.9", current)
+        self.assertIn("2026-10-03-beta.10", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each further hint costs one new diamond", current)
@@ -190,7 +190,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.9", terms)
+        self.assertIn("2026-10-03-beta.10", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("Each pack has one required price", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
@@ -239,7 +239,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.9", terms)
+        self.assertIn("2026-10-03-beta.10", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -288,7 +288,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.9", terms)
+        self.assertIn("2026-10-03-beta.10", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
         self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
@@ -299,6 +299,27 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("for 50 stars or 20 new diamonds", old)
         self.assertIn("Individual cash-pack and Remove Ads checkout remain disabled", old)
         self.assertNotIn("A combined price requires both displayed amounts", old)
+
+    def test_bonus_totals_retain_beta_nine_and_original_fulfillment_quantities(self):
+        previous = self.root / "legal/2026-10-03-beta.9"
+        for name, checksum in {
+            "terms-beta.md": "9e5f43db00d7ceecae6813df4704e1cf3fb7025f2936f942c2105beb0f05cdb4",
+            "privacy-beta.md": "2850703566c95813b5a7473e8e175bb7e7f52d2ad64e98709100e46f09ceb06e",
+        }.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        output = self.build()
+        terms = normalized((output / "beta/terms/index.html").read_text())
+        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        self.assertIn("50, 200 or 500 stars", terms)
+        self.assertIn("10, 40 or 100 diamonds", terms)
+        self.assertIn("150 stars plus 50 bonus", terms)
+        self.assertIn("€1.99, €4.99 and €9.99", terms)
+        self.assertIn("An included bonus is part of the displayed total", terms)
+        self.assertIn("Previously confirmed transactions retain their recorded quantity", terms)
+        self.assertIn("does not rewrite them", privacy)
+        old = normalized((output / "legal/2026-10-03-beta.9/terms/index.html").read_text())
+        self.assertIn("A combined price requires both displayed amounts", old)
+        self.assertNotIn("50, 200 or 500 stars", old)
 
     def test_unreviewed_source_files_are_not_published(self):
         (self.root / "unreviewed-internal.txt").write_text("Not website content.")

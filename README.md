@@ -42,7 +42,13 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.9`.
+Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.10`.
+Beta.10 adds the designated included-bonus currency totals: 50/200/500 stars
+and 10/40/100 diamonds. German examples remain €1.99/€4.99/€9.99; actual
+localized Apple prices and displayed totals govern checkout. A bonus is included
+in one verified fulfillment, with no rewriting or re-crediting of earlier
+transactions. The following Beta.9 contract remains part of Beta.10.
+
 Beta.9 prepares the next native bundle with one required quoted pack price:
 stars, diamonds or a mandatory combination. Both amounts are required together
 for a combined unlock; insufficient currency creates no grant or partial debit.
