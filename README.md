@@ -1,3 +1,24 @@
+Native build **0.1.0 (23)** is Testing in both the internal **Daily Pause Team**
+and external **Daily Pause Beta** groups before this version policy is published.
+Both hosted client policies are revision 16, latest/minimum 23, with the unchanged
+authorised TestFlight join URL. This is invited Beta metadata; no public App Store
+release. Apple controls tester membership, invitation delivery and installations.
+
+Build 23 uses Beta Terms/Privacy edition `2026-10-03-beta.13`; the website's separate
+public edition is `2026-10-03-public.3`. The native account controls cover export,
+supplemental privacy requests and confirmed deletion. Post-deletion purchase
+restoration remains disabled pending its separate controlled device/provider
+checks. Ordinary same-account purchase recovery retains its existing controls.
+Version metadata changes no backend, checkout, advertising or restoration flags.
+
+The generator schedules, date assignments, `daily-mix-v2`, immutable legal sources,
+pack questions and prices are unchanged by this policy publication. Build 23
+retains the internal revision-8 `local-v6` generator schedule; the root schedule
+remains revision 6 / `local-v4`. Build 22's binary and delivery evidence remain
+immutable.
+
+## Retained build 22 policy publication record
+
 Native build **0.1.0 (22)** is Testing in both the internal Daily Pause Team
 (one tester/one build) and external Daily Pause Beta groups (five testers/one
 build). The former build 21 membership was removed from both groups only after 22
@@ -45,7 +66,14 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-09-30-public.1` and `2026-10-03-beta.11`.
+Current source editions are `2026-10-03-public.3` and `2026-10-03-beta.13`.
+The public and Beta notices identify the operator, appointed EU representative
+and published privacy contact. They describe account export, supplemental access
+review, deletion, restricted recovery safeguards and the supported paid benefits.
+Publication does not enable a provider feature, accept an agreement for a user,
+or release an app. Earlier edition sources remain immutable.
+
+The following Beta.11 record is retained history.
 Beta.11 prepares designated TestFlight publisher banners and optional rewarded
 videos under separate advertising controls. Requests remain non-personalised;
 Google UMP supplies applicable consent/refusal and required privacy options.
@@ -149,7 +177,7 @@ this public repository contains no puzzle levels or generator implementation.
 The explicit October 1 Beta archive reset replaces older daily runtime editions;
 existing account balances, whole-day ownership and issued question snapshots stay.
 
-Native **0.1.0 (22)** is available to both internal and external TestFlight
+Native **0.1.0 (23)** is available to both internal and external TestFlight
 testers before its latest-build policy is published. Its bundled configuration
 and explicit metadata URLs select `local-v6`; keeping the root generator manifest
 at `local-v4` does not change that binary's daily generator. The iOS update URL is
@@ -160,9 +188,10 @@ or Android release. Static metadata never installs executable generator code.
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-Both root and internal policy revision 15 select latest/minimum iOS
-**0.1.0 (22)** and leave Android unset. Revision 15 is a monotonic successor to
-build 22's bundled revision 14 and prior hosted revision 13. Native clients check
+Both root and internal policy revision 16 select latest/minimum iOS
+**0.1.0 (23)** and leave Android unset. Revision 16 is a monotonic successor to
+prior hosted revision 15. A bundled policy with revision 16 must contain the same
+build requirements and update URL. Native clients check
 before the legal gate/app bootstrap and again on resume. The shipped gate
 compares the installed version against `latest`, so older known clients receive
 the required-update page; same/newer builds may continue. Existing binaries

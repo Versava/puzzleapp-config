@@ -17,12 +17,14 @@ class InternalConfigurationTests(unittest.TestCase):
         internal_policy = load_release(ROOT / "internal/client-release.json")
         self.assertEqual(public["revision"], 6)
         self.assertEqual(public["windows"][0]["edition"], "local-v4")
-        self.assertEqual(public_policy["revision"], 15)
-        self.assertEqual(public_policy["ios"]["latestBuild"], 22)
-        self.assertEqual(public_policy["ios"]["minimumBuild"], 22)
-        self.assertEqual(internal_policy["revision"], 15)
-        self.assertEqual(internal_policy["ios"]["latestBuild"], 22)
-        self.assertEqual(internal_policy["ios"]["minimumBuild"], 22)
+        self.assertEqual(public_policy["revision"], 16)
+        self.assertEqual(public_policy["ios"]["latestBuild"], 23)
+        self.assertEqual(public_policy["ios"]["minimumBuild"], 23)
+        self.assertEqual(internal_policy["revision"], 16)
+        self.assertEqual(internal_policy["ios"]["latestBuild"], 23)
+        self.assertEqual(internal_policy["ios"]["minimumBuild"], 23)
+        self.assertEqual(public_policy, internal_policy)
+        self.assertEqual(public_policy["ios"]["updateUrl"], "https://testflight.apple.com/join/CCCawA1Q")
         self.assertEqual(internal["windows"], [{
             "from": "0001-01-01", "through": "2026-12-31",
             "edition": "local-v6", "minBuild": {"ios": 13, "android": 13},
