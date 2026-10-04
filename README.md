@@ -1,3 +1,26 @@
+Native build **0.1.0 (24)** is Testing in both the internal **Daily Pause Team**
+(one tester, only build 24) and external **Daily Pause Beta** (five testers, only
+build 24) before this version policy is published. Both hosted client policies
+are revision 17, latest/minimum 24, with the unchanged authorised TestFlight join
+URL. This is invited Beta metadata; no public App Store release. Apple controls
+actual invitation delivery and physical installations.
+
+Build 24 ships the Today/account UI improvements, persisted generator adoption
+and bounded offline client compatibility. It retains Beta Terms/Privacy edition
+`2026-10-03-beta.13` and the separate website Public edition
+`2026-10-03-public.3`. Existing Beta.13 acceptance remains valid. Physical-device
+account revocation, interrupted deletion and post-deletion Apple restoration
+acceptance remain separate; post-deletion restoration stays disabled.
+
+Generator schedules, date assignments, `daily-mix-v2`, immutable legal sources,
+pack questions and prices are unchanged by this policy publication. Build 24
+retains internal revision 8 / `local-v6`; root revision 6 / `local-v4` and the
+retained v5 schedule stay exact. Build 23's signed binary and delivery evidence
+remain immutable. Version metadata changes no backend, checkout, advertising
+or restoration flags.
+
+## Retained build 23 policy publication record
+
 Native build **0.1.0 (23)** is Testing in both the internal **Daily Pause Team**
 and external **Daily Pause Beta** groups before this version policy is published.
 Both hosted client policies are revision 16, latest/minimum 23, with the unchanged
@@ -177,7 +200,7 @@ this public repository contains no puzzle levels or generator implementation.
 The explicit October 1 Beta archive reset replaces older daily runtime editions;
 existing account balances, whole-day ownership and issued question snapshots stay.
 
-Native **0.1.0 (23)** is available to both internal and external TestFlight
+Native **0.1.0 (24)** is available to both internal and external TestFlight
 testers before its latest-build policy is published. Its bundled configuration
 and explicit metadata URLs select `local-v6`; keeping the root generator manifest
 at `local-v4` does not change that binary's daily generator. The iOS update URL is
@@ -188,23 +211,24 @@ or Android release. Static metadata never installs executable generator code.
 
 `client-release.json` independently declares the latest/minimum supported native
 version and build, policy revision and approved store/TestFlight update URL.
-Both root and internal policy revision 16 select latest/minimum iOS
-**0.1.0 (23)** and leave Android unset. Revision 16 is a monotonic successor to
-prior hosted revision 15. A bundled policy with revision 16 must contain the same
-build requirements and update URL. Native clients check
-before the legal gate/app bootstrap and again on resume. The shipped gate
-compares the installed version against `latest`, so older known clients receive
-the required-update page; same/newer builds may continue. Existing binaries
-without this gate cannot receive it retroactively.
+Both root and internal policy revision 17 select latest/minimum iOS
+**0.1.0 (24)** and leave Android unset. Revision 17 is a monotonic successor to
+prior hosted revision 16. The bundled revision-17 policy contains the same build
+requirements and update URL. Native clients check before the legal gate/app
+bootstrap and again on resume. A successful validated online check requires the
+latest build; same/newer builds may continue. Existing binaries cannot receive
+new client behavior retroactively.
 
 The client validates strict shape and numeric versions, bounds downloads to
 16 KiB with a five-second timeout, rejects redirects/unapproved URLs and keeps a
-monotonic validated cache. Offline startup uses the valid cache or bundled policy,
-and a cached higher latest build can still require an update offline. A higher
-policy revision cannot lower a previously known latest or minimum requirement;
-lowering the internal minimum in a new revision would not relax devices that
-already cached a higher policy. This strict schema has no timed-grace fields;
-the minimum-build value does not enable offline grace.
+monotonic validated cache. Offline startup uses valid cached or bundled policy.
+A higher revision cannot lower a previously known latest or minimum requirement.
+Build 24 separately persists the last successful online check that allowed the
+exact installed version and build. A failed policy fetch may allow a known-outdated client
+for less than seven days from that check; a successful online check still blocks
+an outdated client. Legacy caches without a valid timestamp receive no invented
+allowance. Builds through 23 retain their earlier strict offline gate. The policy
+schema adds no grace fields, and its minimum value does not itself grant grace.
 
 Offline reward authorization is separate. The current server issues
 account/question-bound tickets for UTC yesterday, today and the next six dates
@@ -213,11 +237,15 @@ UTC midnight until eight days later: the puzzle date plus seven days of grace.
 Previously issued unexpired tickets retain their original questions across
 generator changes, and account/date reward caps prevent duplicate credits.
 The phone needs a matching ticket to queue eligible pending stars; completion
-alone is not spendable currency. A cached higher client policy can still block
-an older app offline despite an unexpired ticket. These protections do not
-implement the requested per-phone generator adoption journal, next-local-day
-activation or seven-day update handover. Those require a coordinated binary and
-service change; this publication changes neither tickets nor generators.
+alone is not spendable currency. The client compatibility allowance extends
+neither ticket expiry nor the server upload deadline. Build 24 persists the
+installation's current recipe, supported pending target and next local activation
+date. A received target keeps the current day on its recorded recipe and adopts
+on a later device-local day, including after an offline restart. Visited-date and
+per-slot pins remain intact; untouched historical dates use the canonical mapping.
+Future generator rollouts still require trusted backend questions for both
+editions through the transition window. This publication changes neither tickets,
+trusted questions nor generators, and an adoption timestamp cannot grant currency.
 The JSON is public metadata with short freshness/revalidation; it contains no
 credentials or account data. Publish a higher requirement only after the intended
 audience can install the update. Web development is exempt from native enforcement.
