@@ -1,4 +1,17 @@
-# Current build 27 policy publication — 4 October 2026
+# Current build 28 policy publication — 4 October 2026
+
+Native **0.1.0 (28)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers).
+Both client policies are **revision 21, latest/minimum build 28**.
+
+This beta resets older saved daily selections to the current `local-v7` recipe,
+while preserving progress on exact current questions and all account balances.
+Its active NAS collection contains 96 packs / 11,520 levels. Original Colour Links
+questions are replaced by the reviewed v4 questions; original pack IDs remain only
+as invisible ownership aliases. Picture Logic uses Easy 5×5, Medium 10×10 and Hard
+15×15 throughout daily play and the active packs. No public App Store release.
+
+## Retained build 27 policy publication record
 
 Native **0.1.0 (27)** is Testing in both existing groups: **Daily Pause Team**
 (internal, one tester) and **Daily Pause Beta** (external, five testers).
