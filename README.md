@@ -1,4 +1,27 @@
-# Current build 25 policy publication — 4 October 2026
+# Current build 26 policy publication — 4 October 2026
+
+Native **0.1.0 (26)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers). Testing
+notes were saved and confirmed after navigation. Apple controls invitation
+delivery and physical installation. This remains invited TestFlight testing;
+public App Store release stays **HOLD**.
+
+Both client policies are **revision 19, latest/minimum build 26**. The internal
+generator schedule is **revision 9 / `local-v7`**, using `daily-mix-v2`. The exact
+previous revision-8 v6 schedule is retained at `/internal/manifest-v6.json`;
+the retained v5 and root revision-6 v4 schedules are unchanged. Started questions
+retain their original generator, and a received generator is adopted on the next
+local day. Build 26 adds precise controls for large Picture Logic boards and
+limits newly generated v7 Colour Links boards to one or two validated solutions.
+The existing 96 immutable packs remain unchanged.
+
+Beta 14/Public 4 legal editions, offers, advertising declarations and historical
+sources are unchanged. Version metadata does not enable paid Production features
+or change backend controls. GitHub validation, Pages deployment and exact hosted
+readback evidence are recorded in the private monorepo's build-26 publication
+receipt.
+
+## Retained build 25 policy publication record
 
 Native **0.1.0 (25)** is Testing in both existing groups: **Daily Pause Team**
 (internal, one tester, only build 25) and **Daily Pause Beta** (external, five
