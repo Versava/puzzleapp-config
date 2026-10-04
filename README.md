@@ -1,4 +1,16 @@
-# Current build 28 policy publication — 4 October 2026
+# Current build 29 — 5 October 2026
+
+Native **0.1.0 (29)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers).
+Picture Logic uses **Easy 5–7, Medium 8–10 and Hard 11–15**. The internal
+schedule is revision 10 / local-v8; exact revision 9 / local-v7 remains at
+`/internal/manifest-v7.json`. Both client policies are revision 22 / latest and minimum 29.
+
+The twelve Picture Logic packs have been remade under their current public IDs
+with 120 levels each. Pack prices and existing ownership remain unchanged.
+This is a TestFlight beta; no public App Store release.
+
+## Retained build 28 policy publication record
 
 Native **0.1.0 (28)** is Testing in both existing groups: **Daily Pause Team**
 (internal, one tester) and **Daily Pause Beta** (external, five testers).

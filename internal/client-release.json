@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "revision": 21,
+  "revision": 22,
   "ios": {
     "latestVersion": "0.1.0",
-    "latestBuild": 28,
+    "latestBuild": 29,
     "minimumVersion": "0.1.0",
-    "minimumBuild": 28,
+    "minimumBuild": 29,
     "updateUrl": "https://testflight.apple.com/join/CCCawA1Q"
   },
   "android": null
