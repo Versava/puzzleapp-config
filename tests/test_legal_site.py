@@ -141,11 +141,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.13")
+        self.assertEqual(self.edition, "2026-10-04-beta.14")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-03-beta.13", current)
+        self.assertIn("2026-10-04-beta.14", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each further hint costs one new diamond", current)
@@ -190,7 +190,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-03-beta.13", terms)
+        self.assertIn("2026-10-04-beta.14", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("Each pack has one required price", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
@@ -239,7 +239,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.13", terms)
+        self.assertIn("2026-10-04-beta.14", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -288,7 +288,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-03-beta.13", terms)
+        self.assertIn("2026-10-04-beta.14", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
         self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
@@ -350,7 +350,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-03-beta.13")
+        self.assertEqual(self.edition, "2026-10-04-beta.14")
         output = self.build()
         terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
@@ -398,7 +398,7 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-03-public.3")
+        self.assertEqual(self.current["publicEdition"], "2026-10-04-public.4")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
@@ -433,7 +433,7 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("A combined price requires both amounts", public_terms)
         self.assertIn("Apple handles refunds", public_terms)
         support = normalized((output / "support/index.html").read_text())
-        self.assertIn("Supplemental data request", support)
+        self.assertIn("Request my data", support)
         self.assertIn("normal response period is one month", support)
         self.assertIn("New Plus diamond eligibility starts on the next UTC date", support)
         self.assertIn("Fasangartenstr 102, 81549 München", support)

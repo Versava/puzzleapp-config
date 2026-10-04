@@ -1,3 +1,20 @@
+The current website legal editions are **Beta 14** (`2026-10-04-beta.14`) and
+**Public 4** (`2026-10-04-public.4`). They describe the authorized new-account
+30-star/one-current-diamond gift, unspent-only currency refunds without automatic
+debt, and enabled private NAS data-request preparation with separate staff
+notifications and human review. Publication does not accept an agreement for a
+user, enable a runtime feature or release the public app.
+
+The next native candidate pins these editions and requires the existing separate
+Terms acceptance and Privacy acknowledgement. Distributed build 24 keeps its
+frozen Beta 13/Public 3 bytes. Hosted client policy remains revision 17,
+latest/minimum build 24, until the next build is actually available in both
+TestFlight groups. Generator schedules, 96 packs, app-ads.txt and prior legal
+editions remain unchanged. Production mail/preparation and public launch remain
+subject to their separate controls; public release stays on HOLD.
+
+## Retained build 24 policy publication record
+
 Native build **0.1.0 (24)** is Testing in both the internal **Daily Pause Team**
 (one tester, only build 24) and external **Daily Pause Beta** (five testers, only
 build 24) before this version policy is published. Both hosted client policies
@@ -89,7 +106,7 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-10-03-public.3` and `2026-10-03-beta.13`.
+Current source editions are `2026-10-04-public.4` and `2026-10-04-beta.14`.
 The public and Beta notices identify the operator, appointed EU representative
 and published privacy contact. They describe account export, supplemental access
 review, deletion, restricted recovery safeguards and the supported paid benefits.
