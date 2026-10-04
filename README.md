@@ -1,3 +1,36 @@
+# Current build 25 policy publication — 4 October 2026
+
+Native **0.1.0 (25)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester, only build 25) and **Daily Pause Beta** (external, five
+testers, only build 25). The 1,144-character testing notes are saved and were
+confirmed after navigation. Prior build 24 group membership was removed after
+build 25 became Testing; its binary and frozen artifacts are retained.
+Apple controls invitation delivery and physical installation.
+
+Both hosted client policies are now **revision 18, latest/minimum build 25**,
+with version `0.1.0`, the unchanged authorised TestFlight join URL and null Android
+policy. Publication commit `95a7217dcec4ed99be5b868fd0c7b146f5df4fd3` passed
+validation run `37200801717` and Pages deployment
+`4f1a6784-a0dd-4552-8f9c-16f566dc831d`. Four actual HTTP GETs on the custom and
+Pages hosts matched the frozen native policy bytes exactly. The policy change
+updated only the two policy files and their two focused tests.
+
+Signed build 25 pins **Beta 14** (`2026-10-04-beta.14`) and **Public 4**
+(`2026-10-04-public.4`) and requires the existing separate Terms acceptance and
+Privacy acknowledgement for these editions. It includes newcomer gift claim
+and Request my data/preparation-status UI. Prepared data and notification
+acceptance remain separate from the supplemental human-reviewed response.
+No agreement was accepted for a user by publication.
+
+The 96 packs, offer economics, generator schedules, app-ads.txt and all historical
+legal editions are unchanged. Build 24's frozen Beta 13/Public 3 artifacts remain
+intact. Production controls retain their separate acceptance and public App Store
+release remains **HOLD**; this is invited TestFlight distribution.
+
+## Retained pre-build-25 legal and policy publication records
+
+The dated records below retain their original scope and status.
+
 The current website legal editions are **Beta 14** (`2026-10-04-beta.14`) and
 **Public 4** (`2026-10-04-public.4`). They describe the authorized new-account
 30-star/one-current-diamond gift, unspent-only currency refunds without automatic
