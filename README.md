@@ -1,7 +1,7 @@
 The current website legal editions are **Beta 14** (`2026-10-04-beta.14`) and
 **Public 4** (`2026-10-04-public.4`). They describe the authorized new-account
 30-star/one-current-diamond gift, unspent-only currency refunds without automatic
-debt, and enabled private NAS data-request preparation with separate staff
+debt, and private NAS data-request preparation when enabled, with separate staff
 notifications and human review. Publication does not accept an agreement for a
 user, enable a runtime feature or release the public app.
 
