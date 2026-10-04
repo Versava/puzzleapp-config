@@ -13,9 +13,9 @@ class ClientReleaseTest(unittest.TestCase):
 
     def test_current_beta_policy(self):
         self.assertEqual(self.policy["ios"]["latestVersion"], "0.1.0")
-        self.assertEqual(self.policy["revision"], 19)
-        self.assertEqual(self.policy["ios"]["latestBuild"], 26)
-        self.assertEqual(self.policy["ios"]["minimumBuild"], 26)
+        self.assertEqual(self.policy["revision"], 20)
+        self.assertEqual(self.policy["ios"]["latestBuild"], 27)
+        self.assertEqual(self.policy["ios"]["minimumBuild"], 27)
         self.assertEqual(self.policy["ios"]["minimumVersion"], "0.1.0")
         self.assertEqual(self.policy["ios"]["updateUrl"], "https://testflight.apple.com/join/CCCawA1Q")
         self.assertIsNone(self.policy["android"])

@@ -1,4 +1,22 @@
-# Current build 26 policy publication — 4 October 2026
+# Current build 27 policy publication — 4 October 2026
+
+Native **0.1.0 (27)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers).
+Both client policies are **revision 20, latest/minimum build 27**.
+
+This beta adds twelve reviewed Colour Links replacement collections, 120 levels
+each. Easy allows multiple legal answers; Medium and Hard have one or two
+exhaustively verified answers. Original immutable pack content and progress
+identities remain available. Owners of an original collection inherit its
+replacement without a new currency debit. Prices remain one fixed price per
+collection. There are 96 current collections plus retained original editions.
+
+The daily schedule remains **revision 9 / `local-v7` / `daily-mix-v2`** with its
+existing minimum build 26. Root and retained generator schedules, legal editions,
+advertising declarations and Production provider gates remain unchanged.
+Version metadata does not submit or release a public App Store version.
+
+## Retained build 26 policy publication record
 
 Native **0.1.0 (26)** is Testing in both existing groups: **Daily Pause Team**
 (internal, one tester) and **Daily Pause Beta** (external, five testers). Testing
