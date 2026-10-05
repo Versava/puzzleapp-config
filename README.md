@@ -1,21 +1,30 @@
-# Current build 29 — 5 October 2026
+# Current build 30 — 5 October 2026
 
-Native **0.1.0 (29)** is Testing in both existing groups: **Daily Pause Team**
+Native **0.1.0 (30)** is Testing in both existing groups: **Daily Pause Team**
 (internal, one tester) and **Daily Pause Beta** (external, five testers).
 Picture Logic uses **Easy 5–7, Medium 8–10 and Hard 11–15**. The internal
 schedule is revision 10 / local-v8; exact revision 9 / local-v7 remains at
-`/internal/manifest-v7.json`. Both client policies are revision 22 / latest and minimum 29.
+`/internal/manifest-v7.json`. Both client policies are revision 23 / latest and minimum 30.
 
 The twelve Picture Logic packs have been remade under their current public IDs
 with 120 levels each. Pack prices and existing ownership remain unchanged.
-This is a TestFlight beta; no public App Store release.
+This beta improves large-board Precision drag controls and edge continuation,
+hides banner and rewarded-ad choices until an ad has loaded, and introduces the
+cancellable 14-day account-deletion grace period. This is a TestFlight beta; no
+public App Store release.
 
 The current website legal editions are **Beta 15** (`2026-10-05-beta.15`) and
 **Public 5** (`2026-10-05-public.5`). They describe the direct deletion flow at
 Account → Contact support → Delete account, the 14-calendar-day grace period,
 the exact scheduled date, continued account use, Stop deletion, and separate
-Apple subscription management. This legal update does not change the hosted
-client policies, which remain revision 22 / latest and minimum build 29.
+Apple subscription management.
+
+## Retained build 29 policy publication record
+
+Native **0.1.0 (29)** was Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers). Both
+client policies were **revision 22, latest/minimum build 29**. Build 29 has now
+been removed from both tester groups without expiring or deleting its binary.
 
 ## Retained build 28 policy publication record
 
