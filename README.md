@@ -1,4 +1,17 @@
-# Beta.17 legal website update — 5 October 2026
+# Build 32 TestFlight policy — 5 October 2026
+
+The native beta includes offline currency Hints, preserved authentication after
+unrelated signature rejections, three-diamond Autofill and regional Store Bundle
+value. It bundles Beta.17/Public.5, local-v8, 96 NAS packs and offer revision 16.
+Native 0.1.0 (32) is Testing in Daily Pause Team (one internal tester) and
+Daily Pause Beta (five external testers). Testing notes are saved; build 31
+was removed from group membership without expiring its binary. Policy 25
+sets latest/minimum build 32 after that verified distribution. The native
+archive, all 14 assets and 162 frozen inputs passed strict signing and drift
+checks; 705 Flutter tests and 73 static checks passed. No public App Store
+release is included.
+
+# Retained Beta.17 legal website publication — 5 October 2026
 
 Beta `2026-10-05-beta.17` adds provisional offline currency Hint delivery from
 a previously confirmed account wallet, local reservations, ordered replay and
@@ -20,7 +33,7 @@ Public.5 and both build-31 client policies remain unchanged. Local validation
 passed 73 static checks and 30 native legal-gate checks for each channel.
 No public App Store release is included.
 
-# Current build 31 — 5 October 2026
+# Retained build 31 — 5 October 2026
 
 Native **0.1.0 (31)** keeps the local-v8 daily generator and the existing
 96-pack collection. Its active Plus button shows the localized subscription
