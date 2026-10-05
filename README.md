@@ -1,6 +1,20 @@
-# Current build 30 — 5 October 2026
+# Current build 31 — 5 October 2026
 
-Native **0.1.0 (30)** is Testing in both existing groups: **Daily Pause Team**
+Native **0.1.0 (31)** keeps the local-v8 daily generator and the existing
+96-pack collection. Its active Plus button shows the localized subscription
+price below “Manage subscription”. Picture Logic Precision now uses the left
+pad to move only; press or hold Fill/Mark on the right to apply, and release the
+right button to stop. Edge movement continues, and one held stroke uses one Undo.
+
+Native **0.1.0 (31)** is Testing in both existing groups: **Daily Pause Team**
+(internal, one tester) and **Daily Pause Beta** (external, five testers). External
+Beta review is approved. Both client policies are **revision 24, latest/minimum
+build 31**. This is a TestFlight beta publication; no public App Store release.
+Autofill and revised diamond pack prices remain proposals.
+
+## Retained build 30 policy publication record
+
+Native **0.1.0 (30)** was Testing in both existing groups: **Daily Pause Team**
 (internal, one tester) and **Daily Pause Beta** (external, five testers).
 Picture Logic uses **Easy 5–7, Medium 8–10 and Hard 11–15**. The internal
 schedule is revision 10 / local-v8; exact revision 9 / local-v7 remains at
