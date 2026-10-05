@@ -1,3 +1,14 @@
+# Beta.16 legal website update — 5 October 2026
+
+Beta `2026-10-05-beta.16` describes regional Store Bundle value and
+three-diamond Autofill. Its exact canonical/native next-candidate documents
+match the new immutable website source edition and Beta pointer. Distributed
+TestFlight build 31 retains its frozen Beta.15 agreement; website publication
+does not change that binary, accept an agreement or activate Autofill.
+Public.5 and both build-31 client policies remain unchanged. Local validation
+passed 73 static checks and 30 native legal-gate checks for each channel.
+No public App Store release is included.
+
 # Current build 31 — 5 October 2026
 
 Native **0.1.0 (31)** keeps the local-v8 daily generator and the existing

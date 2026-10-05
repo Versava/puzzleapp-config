@@ -74,6 +74,27 @@ class LegalSiteTests(unittest.TestCase):
         self.current, self.editions = load_editions(self.root)
         self.edition = self.current["betaEdition"]
 
+    def test_autofill_regional_value_edition_retains_published_beta_fifteen(self):
+        previous = self.root / "legal/2026-10-05-beta.15"
+        for name, checksum in {
+            "terms-beta.md": "f90e35cf6c318c4ee50d7b3fde7932dfc35f7d3e6124b3e92d60e8098beeda2c",
+            "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
+        }.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        self.assertEqual(self.edition, "2026-10-05-beta.16")
+        output = self.build()
+        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        self.assertIn("three-diamond price", terms)
+        self.assertIn("never changes fixed clues", terms)
+        self.assertIn("grants no move and charges no diamonds", terms)
+        self.assertIn("does not refund an already delivered Autofill", terms)
+        self.assertIn("same storefront's diamond-bundle price", terms)
+        self.assertIn("not a live currency exchange rate", terms)
+        self.assertIn("canonical state hash, before-and-after board or path state", privacy)
+        self.assertIn("account exports until deletion", privacy)
+        self.assertIn("currency code, storefront identifier", privacy)
+
     def build(self):
         subprocess.run(
             [sys.executable, "scripts/build.py"], cwd=self.root,
@@ -141,11 +162,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-05-beta.15")
+        self.assertEqual(self.edition, "2026-10-05-beta.16")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-05-beta.15", current)
+        self.assertIn("2026-10-05-beta.16", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("Each further hint costs one new diamond", current)
@@ -190,7 +211,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-05-beta.15", terms)
+        self.assertIn("2026-10-05-beta.16", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("Each pack has one required price", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
@@ -239,7 +260,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-05-beta.15", terms)
+        self.assertIn("2026-10-05-beta.16", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -288,7 +309,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-05-beta.15", terms)
+        self.assertIn("2026-10-05-beta.16", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
         self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
@@ -350,7 +371,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-05-beta.15")
+        self.assertEqual(self.edition, "2026-10-05-beta.16")
         output = self.build()
         terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
@@ -435,7 +456,12 @@ class LegalSiteTests(unittest.TestCase):
                     '<!--email_off--><a href="mailto:privacy@versava.net">privacy@versava.net</a><!--/email_off-->',
                     (output / f"{route}privacy/index.html").read_text(),
                 )
-                self.assertIn("Bundle value €29.99", terms)
+                if channel == "beta":
+                    self.assertIn("configured €29.99 euro reference", terms)
+                    self.assertIn("three-diamond price", terms)
+                    self.assertIn("before-and-after board or path state", privacy)
+                else:
+                    self.assertIn("Bundle value €29.99", terms)
                 self.assertIn("not the subscription charge", terms)
                 self.assertNotIn("There is currently no automatic account-deletion control", privacy)
         historical = normalized((output / "legal/2026-10-03-beta.11/privacy/index.html").read_text())
