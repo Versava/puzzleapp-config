@@ -10,6 +10,13 @@ The twelve Picture Logic packs have been remade under their current public IDs
 with 120 levels each. Pack prices and existing ownership remain unchanged.
 This is a TestFlight beta; no public App Store release.
 
+The current website legal editions are **Beta 15** (`2026-10-05-beta.15`) and
+**Public 5** (`2026-10-05-public.5`). They describe the direct deletion flow at
+Account → Contact support → Delete account, the 14-calendar-day grace period,
+the exact scheduled date, continued account use, Stop deletion, and separate
+Apple subscription management. This legal update does not change the hosted
+client policies, which remain revision 22 / latest and minimum build 29.
+
 ## Retained build 28 policy publication record
 
 Native **0.1.0 (28)** is Testing in both existing groups: **Daily Pause Team**
@@ -97,7 +104,7 @@ release remains **HOLD**; this is invited TestFlight distribution.
 
 The dated records below retain their original scope and status.
 
-The current website legal editions are **Beta 14** (`2026-10-04-beta.14`) and
+At that publication, the website legal editions were **Beta 14** (`2026-10-04-beta.14`) and
 **Public 4** (`2026-10-04-public.4`). They describe the authorized new-account
 30-star/one-current-diamond gift, unspent-only currency refunds without automatic
 debt, and private NAS data-request preparation when enabled, with separate staff
@@ -205,7 +212,7 @@ application server. The authenticated content studio stays separate.
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 
-Current source editions are `2026-10-04-public.4` and `2026-10-04-beta.14`.
+Current source editions are `2026-10-05-public.5` and `2026-10-05-beta.15`.
 The public and Beta notices identify the operator, appointed EU representative
 and published privacy contact. They describe account export, supplemental access
 review, deletion, restricted recovery safeguards and the supported paid benefits.
