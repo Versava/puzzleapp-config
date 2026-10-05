@@ -1,4 +1,15 @@
-# Beta.16 legal website update — 5 October 2026
+# Beta.17 legal website update — 5 October 2026
+
+Beta `2026-10-05-beta.17` adds provisional offline currency Hint delivery from
+a previously confirmed account wallet, local reservations, ordered replay and
+the handling of refused requests. Its exact canonical/native next-candidate
+documents match the new immutable website source edition and Beta pointer.
+Public.5 and both build-31 client policies remain unchanged. Static validation
+passes 73 checks. Distributed TestFlight build 31 retains Beta.15; publishing
+website text does not change the installed binary or accept an agreement.
+No public App Store release is included.
+
+# Retained Beta.16 legal website update — 5 October 2026
 
 Beta `2026-10-05-beta.16` describes regional Store Bundle value and
 three-diamond Autofill. Its exact canonical/native next-candidate documents
