@@ -1,4 +1,19 @@
-# Build 32 TestFlight policy — 5 October 2026
+# Beta.18 legal update — 6 October 2026
+
+Beta `2026-10-06-beta.18` records the accepted game-specific assistance policy:
+placement/path games have first-free Autofill with later diamond prices; Sudoku
+keeps first-free, then one-diamond Hints and separate three-diamond Autofill.
+Recorded prior operations retain their original terms. All Autofill remains
+online; Sudoku currency Hints can use confirmed cached funds offline.
+
+Canonical and native candidate documents match the new immutable website source
+edition and Beta pointer. All 73 static checks pass. Public.5, historical editions,
+both client policies and generator assignments remain unchanged by this legal
+update. Publishing legal text does not update an installed binary or accept an
+agreement. Native build 33 is being prepared; build 32 remains the available beta.
+No public App Store release is included.
+
+# Retained build 32 TestFlight policy — 5 October 2026
 
 The native beta includes offline currency Hints, preserved authentication after
 unrelated signature rejections, three-diamond Autofill and regional Store Bundle
