@@ -81,19 +81,49 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.18")
+        self.assertEqual(self.edition, "2026-10-06-beta.19")
         output = self.build()
         terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
         self.assertIn("costs three diamonds from its first use", terms)
         self.assertIn("never changes fixed clues", terms)
-        self.assertIn("grants no move and charges nothing", terms)
+        self.assertIn("does not create a new confirmed move receipt or debit", terms)
         self.assertIn("does not refund an already delivered use", terms)
         self.assertIn("same storefront's diamond-bundle price", terms)
         self.assertIn("not a live currency exchange rate", terms)
         self.assertIn("canonical state hash, before-and-after board or path state", privacy)
         self.assertIn("account exports until deletion", privacy)
         self.assertIn("currency code, storefront identifier", privacy)
+
+    def test_offline_autofill_edition_retains_beta_eighteen_and_requires_provisional_confirmation(self):
+        previous = self.root / "legal/2026-10-06-beta.18"
+        for name, checksum in {
+            "terms-beta.md": "2a83db5352d7d5abb833d60efd956b6864d9d089ef940381ce73c78a6fe70bcf",
+            "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
+        }.items():
+            self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
+        self.assertEqual(self.edition, "2026-10-06-beta.19")
+        self.assertEqual(self.current["publicEdition"], "2026-10-05-public.5")
+        output = self.build()
+        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        for statement in (
+            "Autofill can prepare one provisional move on the device",
+            "Local delivery is not a confirmed service receipt or final debit",
+            "after other pending Hint and Autofill costs",
+            "preserves its original terms",
+            "do not remove its recorded use or payment reservation",
+        ):
+            self.assertIn(statement, terms)
+        for statement in (
+            "original before-and-after board or path state",
+            "original request protocol",
+            "account delivery journal uses Keychain storage",
+            "account-bound operation marker",
+            "Editing, Undo or Reset does not erase this marker",
+        ):
+            self.assertIn(statement, privacy)
+        self.assertNotIn("Autofill requires online account access", terms)
 
     def build(self):
         subprocess.run(
@@ -162,11 +192,11 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.18")
+        self.assertEqual(self.edition, "2026-10-06-beta.19")
         output = self.build()
         current = (output / "beta/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
-        self.assertIn("2026-10-06-beta.18", current)
+        self.assertIn("2026-10-06-beta.19", current)
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("each later Hint costs one diamond", current)
@@ -211,7 +241,7 @@ class LegalSiteTests(unittest.TestCase):
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
-        self.assertIn("2026-10-06-beta.18", terms)
+        self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("96 released packs across eight games", terms)
         self.assertIn("Each pack has one required price", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
@@ -260,7 +290,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-06-beta.18", terms)
+        self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
         self.assertIn("An unclaimed free daily star expires", terms)
@@ -309,7 +339,7 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         terms = normalized((output / "beta/terms/index.html").read_text())
         privacy = normalized((output / "beta/privacy/index.html").read_text())
-        self.assertIn("2026-10-06-beta.18", terms)
+        self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
         self.assertIn("one-time Remove Ads product may be tested only in designated Sandbox builds", terms)
@@ -371,7 +401,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.18")
+        self.assertEqual(self.edition, "2026-10-06-beta.19")
         output = self.build()
         terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))

@@ -1,3 +1,20 @@
+# Beta.19 legal website — 6 October 2026
+
+The new Beta `2026-10-06-beta.19` describes provisional offline Autofill from a
+cached confirmed account wallet, exact original board and payment reservations,
+shared pending Hint/Autofill funds, online confirmation and protected delivery
+records. Local delivery does not create a server receipt or confirmed debit;
+editing, Undo and Reset retain the original allowance and operation marker.
+Prices remain assistance policy 1.
+
+The canonical and native candidate documents match the new immutable website
+edition. All 74 local static checks, the history gate and static build pass.
+Native build 34 is being prepared and tested; build 33 retains its frozen
+Beta.18. Both hosted client policies remain revision 26/latest and minimum 33
+until the next beta is available. Public.5, older legal editions and generator
+assignments remain unchanged. Website publication does not update an installed
+app or accept an agreement for its user. No public App Store release is included.
+
 # Build 33 TestFlight policy — 6 October 2026
 
 Native **0.1.0 (33)** is Testing in **Daily Pause Team** (one internal tester)
