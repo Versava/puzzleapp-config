@@ -1,4 +1,24 @@
-# Beta.19 legal website — 6 October 2026
+# Build 34 TestFlight policy — 6 October 2026
+
+Native **0.1.0 (34)** is **Testing** in the existing Daily Pause Team and Daily
+Pause Beta groups. It adds the same-account Apple sign-in prompt and protects
+saved account identity and pending work across temporary secure-storage failures.
+Offline Autofill saves its original move and confirmed-wallet reservation before
+applying it, settles once after reconnection, and reuses an already-owned move
+without another charge. Wallet and reward uploads run before assistance replay.
+
+The signed archive/export passes strict checks for **167 frozen inputs and 14
+assets**, with no source drift. It bundles **Beta.19/Public.5**, local-v8,
+manifest 10, the same 96 NAS packs/11,520 levels and offer 16. Real ads, purchases
+and Plus are configured as in build 33. Targeted source tests and analysis pass;
+physical build 34 installation and tester email delivery are not claimed.
+
+Both hosted client policies now use **revision 27, latest/minimum build 34** with
+the existing TestFlight link, published after both groups became Testing. The
+native policy bytes match both hosted sources. Public App Store release remains
+on hold. Retained generator assignments and frozen legal editions are unchanged.
+
+# Retained Beta.19 legal website publication — 6 October 2026
 
 The new Beta `2026-10-06-beta.19` describes provisional offline Autofill from a
 cached confirmed account wallet, exact original board and payment reservations,
@@ -9,13 +29,13 @@ Prices remain assistance policy 1.
 
 The canonical and native candidate documents match the new immutable website
 edition. All 74 local static checks, the history gate and static build pass.
-Native build 34 is being prepared and tested; build 33 retains its frozen
-Beta.18. Both hosted client policies remain revision 26/latest and minimum 33
-until the next beta is available. Public.5, older legal editions and generator
+At that legal publication, native build 34 was being prepared and tested;
+build 33 retained its frozen Beta.18, and both hosted client policies remained
+revision 26/latest and minimum 33 until the next beta became available. Public.5, older legal editions and generator
 assignments remain unchanged. Website publication does not update an installed
 app or accept an agreement for its user. No public App Store release is included.
 
-# Build 33 TestFlight policy — 6 October 2026
+# Retained build 33 TestFlight policy — 6 October 2026
 
 Native **0.1.0 (33)** is Testing in **Daily Pause Team** (one internal tester)
 and **Daily Pause Beta** (five external testers). Its 900-character testing notes
