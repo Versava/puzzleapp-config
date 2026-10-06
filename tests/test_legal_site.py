@@ -81,10 +81,10 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.19")
+        self.assertEqual(self.edition, "2026-10-06-beta.20")
         output = self.build()
-        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
-        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
         self.assertIn("costs three diamonds from its first use", terms)
         self.assertIn("never changes fixed clues", terms)
         self.assertIn("does not create a new confirmed move receipt or debit", terms)
@@ -102,11 +102,11 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.19")
-        self.assertEqual(self.current["publicEdition"], "2026-10-05-public.5")
+        self.assertEqual(self.edition, "2026-10-06-beta.20")
+        self.assertEqual(self.current["publicEdition"], "2026-10-06-public.6")
         output = self.build()
-        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
-        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
         for statement in (
             "Autofill can prepare one provisional move on the device",
             "Local delivery is not a confirmed service receipt or final debit",
@@ -138,7 +138,7 @@ class LegalSiteTests(unittest.TestCase):
             channel = manifest["channel"]
             for kind, filename in FILES[channel].items():
                 source = (self.root / "legal" / edition / filename).read_text()
-                expected = normalized(re.sub(r"^#{1,3} ", "", source, flags=re.M))
+                expected = normalized(re.sub(r"^(?:#{1,3}|-) ", "", source, flags=re.M))
                 routes = [f"legal/{edition}/{kind}"]
                 if self.current[f"{channel}Edition"] == edition:
                     routes.append(kind if channel == "public" else f"{channel}/{kind}")
@@ -184,7 +184,7 @@ class LegalSiteTests(unittest.TestCase):
             self.build()
         self.assertEqual((output / "beta/terms/index.html").read_bytes(), previous)
 
-    def test_current_currency_edition_retains_beta_two_and_exposes_disabled_checkout(self):
+    def test_historical_currency_edition_retains_beta_two_and_exposes_disabled_checkout(self):
         previous = self.root / "legal/2026-10-01-beta.2"
         expected = {
             "terms-beta.md": "bdeec8d7c9e110507f68532d3aff4afaa2a1b71c9f810b61e1ebede59ab957cc",
@@ -192,9 +192,9 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.19")
+        self.assertEqual(self.edition, "2026-10-06-beta.20")
         output = self.build()
-        current = (output / "beta/terms/index.html").read_text()
+        current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
         self.assertIn("2026-10-06-beta.19", current)
         self.assertIn("2026-10-01-beta.2", old)
@@ -216,8 +216,8 @@ class LegalSiteTests(unittest.TestCase):
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         historical = (output / "legal/2026-10-01-beta.3/terms/index.html").read_text()
         self.assertIn("ten new diamonds for each group of seven", terms)
         self.assertIn("New diamond-to-star exchanges are unavailable", terms)
@@ -228,7 +228,7 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("Keychain delivery journal", privacy)
         self.assertNotIn("one diamond for each group of 14 consecutive", historical)
 
-    def test_pack_offer_edition_retains_beta_four_and_matches_current_redemption_records(self):
+    def test_pack_offer_edition_retains_beta_four_and_matches_historical_redemption_records(self):
         previous = self.root / "legal/2026-10-02-beta.4"
         expected = {
             "terms-beta.md": "0ab65d34db4af55b773031dc3f6cc20cfb759cbe5a22d1025448ffbc679484c6",
@@ -238,8 +238,8 @@ class LegalSiteTests(unittest.TestCase):
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-02-beta.4/terms/index.html").read_text())
         self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("96 released packs across eight games", terms)
@@ -265,8 +265,8 @@ class LegalSiteTests(unittest.TestCase):
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         self.assertIn("controlled testing of the monthly Daily Pause Plus", terms)
         self.assertIn("without charging real money", terms)
         self.assertIn("two new diamonds for each eligible UTC calendar date", terms)
@@ -288,8 +288,8 @@ class LegalSiteTests(unittest.TestCase):
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("each previously confirmed diamond into ten new diamonds", terms)
         self.assertIn("manual claim of one free star", terms)
@@ -314,8 +314,8 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         self.assertIn("each later Hint costs one diamond", terms)
         self.assertIn("Neither a video nor Plus covers later Hints or Autofill", terms)
         self.assertIn("permanent whole-day unlock for each selected supported Past date", terms)
@@ -337,8 +337,8 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         self.assertIn("2026-10-06-beta.19", terms)
         self.assertIn("A combined price requires both displayed amounts", terms)
         self.assertIn("grants nothing and charges neither amount", terms)
@@ -359,8 +359,8 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
         output = self.build()
-        terms = normalized((output / "beta/terms/index.html").read_text())
-        privacy = normalized((output / "beta/privacy/index.html").read_text())
+        terms = normalized((output / "legal/2026-10-06-beta.19/terms/index.html").read_text())
+        privacy = normalized((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text())
         self.assertIn("50, 200 or 500 stars", terms)
         self.assertIn("10, 40 or 100 diamonds", terms)
         self.assertIn("150 stars plus 50 bonus", terms)
@@ -401,10 +401,10 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.19")
+        self.assertEqual(self.edition, "2026-10-06-beta.20")
         output = self.build()
-        terms = normalized(" ".join(Page((output / "beta/terms/index.html").read_text()).article))
-        privacy = normalized(" ".join(Page((output / "beta/privacy/index.html").read_text()).article))
+        terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
+        privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
         self.assertIn("publisher banner ads", terms)
         self.assertIn("optional rewarded videos", terms)
         self.assertIn("Production paid purchases, paid pack checkout and Production paid subscriptions remain disabled", terms)
@@ -449,7 +449,7 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-05-public.5")
+        self.assertEqual(self.current["publicEdition"], "2026-10-06-public.6")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
@@ -467,7 +467,7 @@ class LegalSiteTests(unittest.TestCase):
                     self.assertIn("Manage or cancel the subscription through Apple's controls", terms)
                 self.assertIn("Export my data", privacy)
                 self.assertIn("Delete account under Contact support", privacy)
-                self.assertIn("exact deletion time 14 calendar days later", privacy)
+                self.assertIn("14-calendar-day grace period", privacy)
                 self.assertIn("account remains usable", privacy)
                 self.assertIn("Stop deletion", privacy)
                 self.assertIn("31 days", privacy)
@@ -478,7 +478,7 @@ class LegalSiteTests(unittest.TestCase):
                 self.assertIn("Restore Purchases", terms)
                 self.assertIn("next UTC date", terms)
                 self.assertIn("next UTC date", privacy)
-                self.assertIn("purchase/day ledger", privacy)
+                self.assertIn("without restoring spent consumables or deleted records", privacy)
                 self.assertIn("CHOI, Chong Hing", privacy)
                 self.assertIn("Fasangartenstr 102, 81549 München", privacy)
                 self.assertIn("privacy@versava.net", privacy)
@@ -486,19 +486,15 @@ class LegalSiteTests(unittest.TestCase):
                     '<!--email_off--><a href="mailto:privacy@versava.net">privacy@versava.net</a><!--/email_off-->',
                     (output / f"{route}privacy/index.html").read_text(),
                 )
-                if channel == "beta":
-                    self.assertIn("configured €29.99 euro reference", terms)
-                    self.assertIn("costs three diamonds from its first use", terms)
-                    self.assertIn("before-and-after board or path state", privacy)
-                else:
-                    self.assertIn("Bundle value €29.99", terms)
+                self.assertIn("before-and-after board or path state", privacy)
+                self.assertIn("A displayed Bundle value is an illustrative price comparison", terms)
                 self.assertIn("not the subscription charge", terms)
                 self.assertNotIn("There is currently no automatic account-deletion control", privacy)
         historical = normalized((output / "legal/2026-10-03-beta.11/privacy/index.html").read_text())
         self.assertIn("There is currently no automatic account-deletion control", historical)
         public_terms = normalized((output / "terms/index.html").read_text())
-        self.assertIn("two diamonds per eligible UTC date", public_terms)
-        self.assertIn("A combined price requires both amounts", public_terms)
+        self.assertIn("Paid daily allowances are banked for eligible covered dates", public_terms)
+        self.assertIn("A combined price requires both currencies", public_terms)
         self.assertIn("Apple handles refunds", public_terms)
         support = normalized((output / "support/index.html").read_text())
         self.assertIn("Request my data", support)
@@ -518,6 +514,62 @@ class LegalSiteTests(unittest.TestCase):
             support_source,
         )
         self.assertIn('href="mailto:privacy@versava.net"', support_source)
+
+    def test_concise_current_editions_keep_rights_and_privacy_without_gameplay_spec(self):
+        for edition, hashes in {
+            "2026-10-06-beta.19": {
+                "terms-beta.md": "e612aa8dfff65d0d195dbc3ff4cb49c4fe44e8610099e4202c5d2e7053ddac7a",
+                "privacy-beta.md": "64639742303d19462280acb782e47d80478f6b99a7ab4c5547e5ec75f94272fc",
+            },
+            "2026-10-05-public.5": {
+                "terms-public.md": "31b724e02743754904e43657bfd89bca3d6783a146f36abc1e72f734f39ec35f",
+                "privacy-public.md": "b92bc052bf72ef27166bcef9ac0acc5cf541d7e2f87ee2e9f59fbdedc4110a19",
+            },
+        }.items():
+            for name, checksum in hashes.items():
+                self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
+        for channel, edition in (("beta", "2026-10-06-beta.20"), ("public", "2026-10-06-public.6")):
+            folder = self.root / "legal" / edition
+            terms = normalized((folder / f"terms-{channel}.md").read_text())
+            privacy = normalized((folder / f"privacy-{channel}.md").read_text())
+            with self.subTest(channel=channel):
+                self.assertLess(len(terms.split()), 1600)
+                self.assertLess(len(privacy.split()), 1800)
+                for statement in (
+                    "Versava Limited", "support@versava.net", "14-calendar-day grace period",
+                    "Stop deletion", "Paid daily allowances are banked", "including after expiry",
+                    "do not expire merely because Plus ends", "monthly, auto-renewable", "Purchased stars and diamonds do not expire",
+                    "Apple handles refunds", "unspent units", "do not create automatic debt",
+                    "mandatory", "A combined price requires both currencies",
+                ):
+                    self.assertIn(statement, terms)
+                for removed in (
+                    "30 stars", "one-star", "ten new diamonds", "seven consecutive",
+                    "96 released packs", "120 fixed levels", "each later Hint costs",
+                    "net.versava.", "original request protocol", "generator versions",
+                ):
+                    self.assertNotIn(removed, terms)
+                for statement in (
+                    "CHOI, Chong Hing", "Fasangartenstr 102, 81549 München", "privacy@versava.net",
+                    "solved-board evidence", "before-and-after board or path state",
+                    "signed verification or refund evidence", "Google", "Cloudflare", "GitHub",
+                    "legitimate interests", "International processing", "at most 30 days",
+                    "up to 31 days", "up to 30 days", "human review", "one month",
+                    "erasure, restriction, portability", "complaint to the relevant regulator",
+                    "not advertising consent",
+                ):
+                    self.assertIn(statement, privacy)
+                self.assertNotIn("original request protocol", privacy)
+                self.assertNotIn("canonical state hash", privacy)
+                self.assertNotIn("30-star", privacy)
+                self.assertNotIn("reached to the end", terms)
+                self.assertNotIn("reached to the end", privacy)
+        beta_terms = normalized((self.root / "legal/2026-10-06-beta.20/terms-beta.md").read_text())
+        beta_privacy = normalized((self.root / "legal/2026-10-06-beta.20/privacy-beta.md").read_text())
+        self.assertIn("Sandbox transactions do not charge real money", beta_terms)
+        self.assertIn("Test records and access are not guaranteed to transfer", beta_terms)
+        self.assertIn("testers cannot opt out", beta_privacy)
+        self.assertIn("do not share those reports with third parties", beta_privacy)
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
