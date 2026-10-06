@@ -1,4 +1,21 @@
-# Beta.18 legal update — 6 October 2026
+# Build 33 TestFlight policy — 6 October 2026
+
+Native **0.1.0 (33)** is Testing in **Daily Pause Team** (one internal tester)
+and **Daily Pause Beta** (five external testers). Its 900-character testing notes
+are saved, and automatic tester notifications are enabled. Apple controls
+invitation delivery and physical installation. Build 32 was removed from both
+groups after build 33 became Testing; its binary remains available in history.
+
+Both client policies are **revision 26, latest/minimum build 33**, published after
+that verified distribution. The policy bytes match the signed native bundle.
+Build 33 adds game-specific Hint and Autofill availability and diamond prices,
+with first-free assistance where eligible and recorded prior operations retaining
+their original terms. It bundles **Beta.18/Public.5**, **local-v8**, the existing
+96 NAS packs and offer revision 16. All 166 frozen native inputs and 14 assets
+passed signing and drift verification; all 73 static checks passed. No public
+App Store release is included.
+
+# Retained Beta.18 legal website publication — 6 October 2026
 
 Beta `2026-10-06-beta.18` records the accepted game-specific assistance policy:
 placement/path games have first-free Autofill with later diamond prices; Sudoku
@@ -10,7 +27,8 @@ Canonical and native candidate documents match the new immutable website source
 edition and Beta pointer. All 73 static checks pass. Public.5, historical editions,
 both client policies and generator assignments remain unchanged by this legal
 update. Publishing legal text does not update an installed binary or accept an
-agreement. Native build 33 is being prepared; build 32 remains the available beta.
+agreement. At that publication, native build 33 was being prepared and build 32
+remained the available beta.
 No public App Store release is included.
 
 # Retained build 32 TestFlight policy — 5 October 2026
