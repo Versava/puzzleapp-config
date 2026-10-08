@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from check_release import check_release
 from legal_site import FILES, load_editions, render_document
+from validate_client_release import load as load_client_release
 
 
 class Page(HTMLParser):
@@ -383,7 +384,7 @@ class LegalSiteTests(unittest.TestCase):
             "internal/manifest.json", "internal/manifest-v5.json", "internal/manifest-v6.json", "internal/manifest-v7.json", "internal/client-release.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
-            "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html",
+            "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html", "versions/index.html",
         }
         if (ROOT / "app-ads.txt").is_file():
             expected.add("app-ads.txt")
@@ -573,6 +574,7 @@ class LegalSiteTests(unittest.TestCase):
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
+        update_urls = {load_client_release(self.root / source)["ios"]["updateUrl"] for source in ("client-release.json", "internal/client-release.json")}
         for path in output.rglob("*.html"):
             page = Page(path.read_text())
             with self.subTest(page=path.relative_to(output)):
@@ -583,7 +585,9 @@ class LegalSiteTests(unittest.TestCase):
                     if uri.scheme:
                         self.assertIn(uri.scheme, {"https", "mailto"})
                         if uri.scheme == "https":
-                            self.assertEqual(uri.netloc, "puzzle.versava.net")
+                            if uri.netloc != "puzzle.versava.net":
+                                self.assertEqual(path.relative_to(output).as_posix(), "versions/index.html")
+                                self.assertIn(target, update_urls)
                         continue
                     self.assertFalse(uri.netloc)
                     if uri.path:
@@ -593,6 +597,51 @@ class LegalSiteTests(unittest.TestCase):
                         self.assertTrue(resolved.is_file(), target)
                     if uri.fragment:
                         self.assertIn(uri.fragment, page.ids)
+
+    def test_current_versions_labels_matching_testflight_policies_without_a_public_release_claim(self):
+        output = self.build()
+        policy = load_client_release(self.root / "client-release.json")
+        source = (output / "versions/index.html").read_text()
+        text = normalized(source)
+        self.assertEqual(text.count('<h2>Current app policy</h2>'), 1)
+        self.assertIn("TestFlight Beta", text)
+        self.assertIn(f'Latest supported</dt><dd>{policy["ios"]["latestVersion"]} · Build {policy["ios"]["latestBuild"]}', text)
+        self.assertIn(f'Minimum supported</dt><dd>{policy["ios"]["minimumVersion"]} · Build {policy["ios"]["minimumBuild"]}', text)
+        self.assertIn(f'Policy revision {policy["revision"]}', text)
+        self.assertIn("A public App Store release is not listed here", text)
+        self.assertIn("No Android version is listed", text)
+        for target in (policy["ios"]["updateUrl"], "/client-release.json", "/internal/client-release.json"):
+            self.assertIn(target, Page(source).targets)
+        for route in ("index.html", "beta/index.html", "support/index.html"):
+            self.assertIn("/versions/", Page((output / route).read_text()).targets)
+
+    def test_current_versions_follows_policy_changes_without_hardcoded_build_numbers(self):
+        policy = load_client_release(self.root / "client-release.json")
+        policy["revision"] += 1
+        policy["ios"].update(latestVersion="0.2.0", latestBuild=50, minimumVersion="0.1.0", minimumBuild=36)
+        for source in ("client-release.json", "internal/client-release.json"):
+            (self.root / source).write_text(json.dumps(policy))
+        output = self.build()
+        text = normalized((output / "versions/index.html").read_text())
+        self.assertIn("Latest supported</dt><dd>0.2.0 · Build 50", text)
+        self.assertIn("Minimum supported</dt><dd>0.1.0 · Build 36", text)
+        self.assertIn(f'Policy revision {policy["revision"]}', text)
+
+    def test_current_versions_keeps_distinct_app_store_and_testflight_policies_separate(self):
+        policy = load_client_release(self.root / "client-release.json")
+        policy["revision"] += 1
+        policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
+                             updateUrl="https://apps.apple.com/app/id6817787046")
+        (self.root / "client-release.json").write_text(json.dumps(policy))
+        output = self.build()
+        source = (output / "versions/index.html").read_text()
+        self.assertIn("<h2>App policy</h2>", source)
+        self.assertIn("<h2>Internal app policy</h2>", source)
+        self.assertIn("App Store update policy", source)
+        self.assertIn("TestFlight Beta", source)
+        self.assertIn("1.0.0 · Build 50", source)
+        self.assertIn(policy["ios"]["updateUrl"], Page(source).targets)
+        self.assertNotIn("public App Store release is available", source)
 
     def test_policy_metadata_cannot_redirect_publication_to_an_unreviewed_file(self):
         manifest_path = self.root / "legal" / self.edition / "manifest.json"

@@ -1,4 +1,23 @@
-# Build 35 TestFlight policy — 8 October 2026
+# Build 36 TestFlight policy preparation — 8 October 2026
+
+Client policy **revision 29, latest/minimum iOS 0.1.0 (36)** is prepared with
+identical bundled, root and internal policy bytes. Publication is gated on
+build 36 becoming **Testing** in both Daily Pause Team and Daily Pause Beta.
+The existing TestFlight join URL and Android setting are unchanged.
+
+The website's **[Current versions](https://puzzle.versava.net/versions/)** page
+uses the same validated policy JSON that the app reads. It shows latest and
+minimum supported versions/builds and the approved Apple update link. Matching
+root/internal Beta policies appear as one TestFlight Beta policy, without
+claiming a public App Store release. The page is linked from Home, Beta and Support.
+
+The native candidate repairs star-funded Past access while preserving pending
+assistance costs, and retains Apple disconnect guidance after account erasure.
+It keeps **Beta.20/Public.6**, local-v8, manifest 10, all 96 NAS packs/11,520
+levels and offer revision 16. This policy preparation does not publish an update
+requirement or launch the public App Store app.
+
+# Retained build 35 TestFlight policy — 8 October 2026
 
 Native **0.1.0 (35)** is **Testing** in Daily Pause Team (one internal tester)
 and Daily Pause Beta (five external testers). It bundles the shorter

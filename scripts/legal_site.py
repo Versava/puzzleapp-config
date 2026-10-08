@@ -5,6 +5,9 @@ import html
 import json
 from pathlib import Path
 import re
+from urllib.parse import urlsplit
+
+from validate_client_release import load as load_client_release
 
 
 EDITION = re.compile(r"[a-z0-9][a-z0-9.-]{0,63}")
@@ -190,7 +193,7 @@ def render_pages(root, current, editions):
     add("/legal/", page("Document editions", f'<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Document editions</h1><p class="support-intro">Public and testing editions, retained for reference.</p><ul class="edition-list">{history}</ul></main>', "/legal/", testing=True))
     beta = '''<main id="main" class="support-page page-width"><p class="eyebrow">Invited testing</p><h1>Daily Pause Beta</h1>
 <p class="support-intro">Daily Pause is currently tested on iPhone through TestFlight. Read the documents for that testing programme.</p>
-<ul class="edition-list"><li><a href="/beta/terms/">Beta Testing Terms</a></li><li><a href="/beta/privacy/">Beta Privacy Notice</a></li></ul>
+<ul class="edition-list"><li><a href="/beta/terms/">Beta Testing Terms</a></li><li><a href="/beta/privacy/">Beta Privacy Notice</a></li><li><a href="/versions/">Current app versions</a></li></ul>
 <p>Production paid purchases and subscriptions remain disabled. Designated TestFlight builds may display publisher banners and offer optional rewarded videos when separate advertising controls and privacy choices permit it. Publisher ad requests are non-personalised and use Google’s applicable consent and refusal flow; Ad privacy options is available where required. Verified ad-funded grants need an account-bound ticket and Google’s signed completion callback. Designated TestFlight builds may test monthly Daily Pause Plus subscriptions, supported star and diamond consumables, and the one-time Remove Ads product in Apple's Sandbox without real charges when testing controls permit it. The revised Plus product banks two diamonds per eligible paid UTC day, including missed days that can be claimed after cancellation or expiry. Active verified Plus also covers eligible reward benefits directly: the capped daily star bonus, selected supported Past-day unlocks, and hints two and three. These direct benefits require active coverage; banked paid diamonds remain separate. It does not include all-pack access or automatic-ad removal; verified legacy all-packs rights remain separate. Individual cash-pack checkout is disabled, including its purchase tests. Production Remove Ads checkout remains disabled. Labelled Google sample videos do not grant stars, past-day access or paid hints.</p>
 <p>Read and accept the testing Terms and acknowledge the Privacy Notice inside the app before starting. Visiting this site does not accept them or enrol you in testing.</p>
 <p><a href="/terms/">Public Terms of Use</a> · <a href="/privacy/">Public Privacy Notice</a> · <a href="/support/">Support</a></p></main>'''
@@ -198,12 +201,35 @@ def render_pages(root, current, editions):
     support = '''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause help</p><h1>Here to help.</h1>
 <p class="support-intro">Questions about a puzzle, your account, or your privacy? Contact Versava.</p>
 <section class="contact-card"><h2>Email support</h2><!--email_off--><a class="contact-email" href="mailto:support@versava.net?subject=Daily%20Pause%20support">support@versava.net</a><!--/email_off-->
-<p>For an app issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account.</p></section>
+<p>For an app issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account. <a href="/versions/">Check the current supported versions</a>.</p></section>
 <section class="support-section"><h2>Reporting a problem</h2><p>Tell us what you expected and what happened. Screenshots can help; remove unrelated personal information. Do not include passwords, access tokens or payment-card details.</p></section>
 <section class="support-section"><!--email_off--><h2>Account and privacy requests</h2><p>Supported app versions provide Export my data and Request my data in Account. To delete an account, choose Account → Contact support → Delete account. That path leads directly to an in-app confirmation. When enabled, Request my data queues an available server account copy for authorised staff on our private NAS, with minimal received and prepared notifications to our internal privacy mailbox. Preparation remains separate from human review and the reply to you. The automatic account copy identifies any records requiring human review; internal notes are not excluded from applicable access rights merely because they are internal. Contact support@versava.net for other access, correction, erasure or portability requests, or if those controls are unavailable in your installed build. Our appointed EU representative is CHOI, Chong Hing, Fasangartenstr 102, 81549 München; <a href="mailto:privacy@versava.net">privacy@versava.net</a>. You may contact the representative about personal information processing and applicable GDPR rights. We may reasonably verify ownership; do not email usable account credentials.</p><p>After confirmation, deletion is scheduled for the exact time 14 calendar days later. The account remains usable during this grace period, and Account shows the scheduled date and a direct Stop deletion action while cancellation is still possible. Stopping deletion keeps the account. When deletion becomes final it removes the account's balances, unlocks and unclaimed rewards. Account deletion does not cancel Apple subscription billing; manage the subscription separately. When available in the supported build, Restore Purchases can recover verified Remove Ads and active Plus on a new account without recovering the old wallet or unclaimed allowances. New Plus diamond eligibility starts on the next UTC date. Signing out, removing the app or leaving TestFlight does not itself delete server-held records. Where GDPR applies, the normal response period is one month, with timely explanation of any lawful extension.</p><p><a href="/privacy/">Public Privacy Notice</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p><!--/email_off--></section>
 <section class="support-section"><h2>Invited Beta testing</h2><p>Daily Pause is currently tested on iPhone through TestFlight. Production paid purchases and subscriptions remain disabled. Designated TestFlight builds may display publisher banners and offer optional rewarded videos when separate advertising controls and privacy choices permit it. Publisher ad requests are non-personalised and use Google’s applicable consent and refusal flow; Ad privacy options is available where required. Verified ad-funded grants need an account-bound ticket and Google’s signed completion callback. Designated TestFlight builds may test monthly Daily Pause Plus subscriptions, supported star and diamond consumables, and the one-time Remove Ads product in Apple's Sandbox without real charges when testing controls permit it. Individual cash-pack checkout is disabled, including its purchase tests. Production Remove Ads checkout remains disabled. Other designated Beta builds can show labelled Google sample ads; sample videos do not grant stars, Past-day access or paid hints.</p><p><a href="/beta/terms/">Beta Testing Terms</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p></section>
 <section class="support-section"><h2>Operator</h2><address>Versava Limited<br>Unit 1319, 13/F, One Midtown<br>11 Hoi Shing Road, Tsuen Wan<br>Hong Kong</address></section></main>'''
     add("/support/", page("Support", support, "/support/", active="/support/"))
+    policies = [("App policy", "/client-release.json", load_client_release(root / "client-release.json")),
+                ("Internal app policy", "/internal/client-release.json", load_client_release(root / "internal/client-release.json"))]
+    shared = policies[0][2] == policies[1][2]
+    cards = []
+    for label, source, policy in policies[:1] if shared else policies:
+        ios = policy["ios"]
+        testing = urlsplit(ios["updateUrl"]).netloc == "testflight.apple.com"
+        label = "Current app policy" if shared else label
+        channel = "TestFlight Beta" if testing else "App Store update policy"
+        action = "Open TestFlight" if testing else "Open App Store"
+        facts = "".join(f'<div><dt>{name}</dt><dd>{html.escape(ios[field])} · Build {ios[build]}</dd></div>'
+                        for name, field, build in (("Latest supported", "latestVersion", "latestBuild"),
+                                                   ("Minimum supported", "minimumVersion", "minimumBuild")))
+        sources = '<a href="/client-release.json">App policy JSON</a> · <a href="/internal/client-release.json">Internal policy JSON</a>' if shared else f'<a href="{source}">Policy JSON</a>'
+        android = "No Android version is listed." if policy["android"] is None else f'Android: latest {html.escape(policy["android"]["latestVersion"])} (build {policy["android"]["latestBuild"]}), minimum {html.escape(policy["android"]["minimumVersion"])} (build {policy["android"]["minimumBuild"]}).'
+        cards.append(f'''<section class="contact-card version-card"><h2>{label}</h2><span class="badge">{channel}</span>
+<dl class="version-facts">{facts}</dl><p><a href="{html.escape(ios["updateUrl"], quote=True)}">{action}</a></p>
+<p>Policy revision {policy["revision"]} · {sources}</p><p>{android}</p></section>''')
+    beta_only = all(urlsplit(policy["ios"]["updateUrl"]).netloc == "testflight.apple.com" for _, _, policy in policies)
+    status = '<p class="home-note">These are invited TestFlight Beta versions. A public App Store release is not listed here.</p>' if beta_only else '<p class="home-note">For installation and current store availability, use the Apple update link above.</p>'
+    versions = f'''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause updates</p><h1>Current versions</h1>
+<p class="support-intro">Find the latest supported iPhone version and where to update.</p>{"".join(cards)}{status}</main>'''
+    add("/versions/", page("Current versions", versions, "/versions/", active="/versions/"))
     return pages
 
 
