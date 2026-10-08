@@ -1,3 +1,18 @@
+# Build 35 TestFlight policy — 8 October 2026
+
+Native **0.1.0 (35)** is **Testing** in Daily Pause Team (one internal tester)
+and Daily Pause Beta (five external testers). It bundles the shorter
+**Beta.20/Public.6** legal documents, with separate unchecked acceptance actions
+available immediately and optional document viewing. The 507-character testing
+notes are saved, and automatic tester notifications are enabled. Physical
+installation and notification inbox delivery have not been verified.
+
+Client policy **revision 28, latest/minimum build 35** is published after both
+groups became Testing. The signed bundle and policy sources use identical bytes.
+The 96 NAS packs/11,520 levels, offer 16, local-v8 and manifest 10 are unchanged.
+All 337 scoped mobile checks and focused analysis pass. Public App Store release
+remains on hold while backend lifecycle and purchase-recovery gaps are addressed.
+
 # Concise Terms and Privacy — 6 October 2026
 
 Current website editions are **Beta.20** and **Public.6**. The Terms now cover
@@ -10,10 +25,10 @@ cancellable 14-day account-deletion period and EU representative remain.
 Canonical documents, native assets and source pins match the retained new
 website editions. Earlier published editions stay unchanged. The Flutter source
 allows the separate unchecked Terms/Privacy actions immediately, with optional
-document viewing and no scroll-to-end requirement. These mobile changes await
-the next native build: distributed **0.1.0 (34)** retains **Beta.19/Public.5**.
-Client policy **27/latest and minimum34**, generator assignments, ads and purchase
-configuration are unchanged. This legal website update does not launch the app,
+document viewing and no scroll-to-end requirement. These changes are bundled in **0.1.0 (35)**, now Testing in both existing
+TestFlight groups. Build 34 was removed from both groups after build 35 became
+Testing. Client policy **28/latest and minimum 35** accompanies this beta;
+generator assignments, ads and purchase configuration are unchanged. This legal website update does not launch the app,
 accept documents for a user or alter a wallet.
 
 # Build 34 TestFlight policy — 6 October 2026
