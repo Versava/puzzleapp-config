@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "edition": "2026-10-10-beta.22",
+  "channel": "beta",
+  "documents": {
+    "terms": {
+      "file": "terms-beta.md",
+      "sha256": "311ad4df9b19960564d9a3508ad6ec3c577c98f1c6e43d12a04f249a8ab03394"
+    },
+    "privacy": {
+      "file": "privacy-beta.md",
+      "sha256": "edff7b3443fa209c577347d5feca6517c970217bbc48d5c53c88406cfab9b0c4"
+    }
+  }
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 from urllib.parse import urlsplit
 
-from validate_client_release import load as load_client_release
+from validate_client_support import load as load_client_support
 
 
 EDITION = re.compile(r"[a-z0-9][a-z0-9.-]{0,63}")
@@ -207,8 +207,8 @@ def render_pages(root, current, editions):
 <section class="support-section"><h2>Invited Beta testing</h2><p>Daily Pause is currently tested on iPhone through TestFlight. Production paid purchases and subscriptions remain disabled. Designated TestFlight builds may display publisher banners and offer optional rewarded videos when separate advertising controls and privacy choices permit it. Publisher ad requests are non-personalised and use Google’s applicable consent and refusal flow; Ad privacy options is available where required. Verified ad-funded grants need an account-bound ticket and Google’s signed completion callback. Designated TestFlight builds may test monthly Daily Pause Plus subscriptions, supported star and diamond consumables, and the one-time Remove Ads product in Apple's Sandbox without real charges when testing controls permit it. Individual cash-pack checkout is disabled, including its purchase tests. Production Remove Ads checkout remains disabled. Other designated Beta builds can show labelled Google sample ads; sample videos do not grant stars, Past-day access or paid hints.</p><p><a href="/beta/terms/">Beta Testing Terms</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p></section>
 <section class="support-section"><h2>Operator</h2><address>Versava Limited<br>Unit 1319, 13/F, One Midtown<br>11 Hoi Shing Road, Tsuen Wan<br>Hong Kong</address></section></main>'''
     add("/support/", page("Support", support, "/support/", active="/support/"))
-    policies = [("App policy", "/client-release.json", load_client_release(root / "client-release.json")),
-                ("Internal app policy", "/internal/client-release.json", load_client_release(root / "internal/client-release.json"))]
+    policies = [("App policy", "/client-support.json", load_client_support(root / "client-support.json")),
+                ("Internal app policy", "/internal/client-support.json", load_client_support(root / "internal/client-support.json"))]
     shared = policies[0][2] == policies[1][2]
     cards = {"beta": [], "release": []}
     for label, source, policy in policies[:1] if shared else policies:
@@ -219,18 +219,30 @@ def render_pages(root, current, editions):
         update = "" if testing else f'<p><a href="{html.escape(ios["updateUrl"], quote=True)}">Open App Store</a></p>'
         facts = "".join(f'<div><dt>{name}</dt><dd>{html.escape(ios[field])} · Build {ios[build]}</dd></div>'
                         for name, field, build in (("Latest supported", "latestVersion", "latestBuild"),
-                                                   ("Minimum supported", "minimumVersion", "minimumBuild")))
-        sources = '<a href="/client-release.json">App policy JSON</a> · <a href="/internal/client-release.json">Internal policy JSON</a>' if shared else f'<a href="{source}">Policy JSON</a>'
+                                                   ("Minimum version", "minimumVersion", "minimumBuild")))
+        sources = '<a href="/client-support.json">App policy JSON</a> · <a href="/internal/client-support.json">Internal policy JSON</a>' if shared else f'<a href="{source}">Policy JSON</a>'
+        blocked = "<p>No additional blocked versions.</p>"
+        ordinary = ("Beta testers must install the latest available update before continuing."
+                    if ios["updatePolicy"] == "required"
+                    else "Compatible updates remain optional, with a reminder after 14 days.")
+        if ios["blockedRanges"]:
+            entries = []
+            for item in ios["blockedRanges"]:
+                start = f'{html.escape(item["fromVersion"])} · Build {item["fromBuild"]}'
+                end = f'{html.escape(item["throughVersion"])} · Build {item["throughBuild"]}'
+                reason = "Security issue" if item["reason"] == "security" else "Compatibility issue"
+                entries.append(f'<li>{start} through {end}, inclusive — {reason}. Upgrade required.</li>')
+            blocked = '<h4>Blocked versions</h4><ul>' + "".join(entries) + '</ul>'
         android = "No Android version is listed." if policy["android"] is None else f'Android: latest {html.escape(policy["android"]["latestVersion"])} (build {policy["android"]["latestBuild"]}), minimum {html.escape(policy["android"]["minimumVersion"])} (build {policy["android"]["minimumBuild"]}).'
         cards["beta" if testing else "release"].append(f'''<section class="contact-card version-card"><h3>{label}</h3><span class="badge">{channel}</span>
-<dl class="version-facts">{facts}</dl>{update}
+<dl class="version-facts">{facts}</dl><p>{ordinary}</p>{blocked}{update}
 <p>Policy revision {policy["revision"]} · {sources}</p><p>{android}</p></section>''')
     beta_status = "Beta access is by invitation only. Existing testers can update in TestFlight."
     if not cards["beta"]:
         beta_status = "No Beta version is listed in the current policies. Beta access is by invitation only."
     release_status = "Use the App Store link for installation and current store availability." if cards["release"] else "Not released yet. A public App Store release is not listed in the current policies."
     versions = f'''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause updates</p><h1>Current versions</h1>
-<p class="support-intro">Supported iPhone versions are listed separately for Beta and Release.</p>
+<p class="support-intro">Supported iPhone versions are listed separately for Beta and Release. An upgrade is required immediately below the minimum supported version or for a listed blocked version.</p>
 <section class="support-section" aria-labelledby="beta-versions"><h2 id="beta-versions">Beta</h2><p>{beta_status}</p>{"".join(cards["beta"])}</section>
 <section class="support-section" aria-labelledby="release-versions"><h2 id="release-versions">Release</h2><p>{release_status}</p>{"".join(cards["release"])}</section></main>'''
     add("/versions/", page("Current versions", versions, "/versions/", active="/versions/"))

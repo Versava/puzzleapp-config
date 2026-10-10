@@ -1,3 +1,33 @@
+# Prepared release support policy — 10 October 2026
+
+The modern Git-backed API documents are `/client-support.json` and
+`/internal/client-support.json` (schema 2, revision 32). The same checked JSON
+feeds the native app and Current versions page. Both currently describe the
+obtainable invitation-only Beta **0.1.0 (38)**. Public **1.0.0** is a candidate,
+so the page must continue to show Release as not released.
+
+`updatePolicy: "required"` makes a newer Beta mandatory immediately. Future
+obtainable Public policies use `"optional"`: compatible versions keep working,
+with a stronger reminder after 14 days. A configured minimum version or an
+inclusive `blockedRanges` security/compatibility range blocks immediately,
+including with previously validated offline policy. Generator compatibility is
+separate: retained date recipes are resolved before edition checks, and the
+backend independently validates the recipe, date, puzzle inputs and hashes.
+
+Legacy `/client-release.json` documents remain schema 1, revision 31, latest
+and minimum Beta38; legacy binaries already treat the latest version as required.
+Do not advertise an unavailable build or place an optional Public update in the
+legacy document. The new public/internal endpoints have separate validated caches.
+The versions page separates Beta and Release and exposes no public TestFlight
+join action. Earlier checkpoints below describe their historical state.
+
+Beta22/Public8 notices describe requested reply addresses and staff-prepared,
+manually sent email drafts containing private download links. Draft creation
+sends no mail, attaches no account copy, and does not fulfil the request. Prepared
+NAS copies and their links expire after 30 days; local email/draft copies are
+outside the automatic NAS cleanup. Source preparation and publication do not
+claim a native build upload or live feature deployment.
+
 # Build 36 TestFlight policy preparation — 8 October 2026
 
 Client policy **revision 29, latest/minimum iOS 0.1.0 (36)** is prepared with

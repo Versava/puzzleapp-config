@@ -46,7 +46,7 @@ class InternalConfigurationTests(unittest.TestCase):
 
     def test_internal_metadata_contains_configuration_only(self):
         actual = {p.name for p in (ROOT / "internal").iterdir() if p.is_file()}
-        self.assertEqual(actual, {"manifest.json", "manifest-v5.json", "manifest-v6.json", "manifest-v7.json", "client-release.json"})
+        self.assertEqual(actual, {"manifest.json", "manifest-v5.json", "manifest-v6.json", "manifest-v7.json", "client-release.json", "client-support.json"})
         for filename in actual:
             text = (ROOT / "internal" / filename).read_text()
             self.assertIsInstance(json.loads(text), dict)

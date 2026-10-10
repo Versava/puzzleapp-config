@@ -19,6 +19,10 @@
   Content-Type: application/json; charset=utf-8
   Cache-Control: public, max-age=300, must-revalidate
 
+/client-support.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: public, max-age=300, must-revalidate
+
 /app-ads.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: public, max-age=300, must-revalidate
@@ -28,6 +32,10 @@
   Cache-Control: public, max-age=300, must-revalidate
 
 /internal/client-release.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: public, max-age=300, must-revalidate
+
+/internal/client-support.json
   Content-Type: application/json; charset=utf-8
   Cache-Control: public, max-age=300, must-revalidate
 

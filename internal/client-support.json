@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "revision": 32,
+  "ios": {
+    "latestVersion": "0.1.0",
+    "latestBuild": 38,
+    "minimumVersion": "0.1.0",
+    "minimumBuild": 38,
+    "updateUrl": "https://testflight.apple.com/join/CCCawA1Q",
+    "blockedRanges": [],
+    "updatePolicy": "required"
+  },
+  "android": null
+}

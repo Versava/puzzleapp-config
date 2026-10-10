@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from check_release import check_release
 from legal_site import FILES, load_editions, render_document
 from validate_client_release import load as load_client_release
+from validate_client_support import load as load_client_support
 
 
 class Page(HTMLParser):
@@ -63,7 +64,7 @@ class LegalSiteTests(unittest.TestCase):
         self.root = Path(temporary.name) / "source"
         self.root.mkdir()
         for name in (
-            "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg",
         ):
             shutil.copyfile(ROOT / name, self.root / name)
@@ -82,7 +83,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.21")
+        self.assertEqual(self.edition, "2026-10-10-beta.22")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -103,8 +104,8 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.21")
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.7")
+        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -193,7 +194,7 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.21")
+        self.assertEqual(self.edition, "2026-10-10-beta.22")
         output = self.build()
         current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
@@ -379,9 +380,9 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         actual = {str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()}
         expected = {
-            "manifest.json", "manifest.schema.json", "client-release.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
-            "internal/manifest.json", "internal/manifest-v5.json", "internal/manifest-v6.json", "internal/manifest-v7.json", "internal/client-release.json",
+            "internal/manifest.json", "internal/manifest-v5.json", "internal/manifest-v6.json", "internal/manifest-v7.json", "internal/client-release.json", "internal/client-support.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html", "versions/index.html",
@@ -402,7 +403,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.21")
+        self.assertEqual(self.edition, "2026-10-10-beta.22")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -450,7 +451,7 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.7")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
@@ -572,26 +573,50 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("testers cannot opt out", beta_privacy)
         self.assertIn("do not share those reports with third parties", beta_privacy)
 
-    def test_request_email_edition_discloses_verified_recipient_and_preserves_old_notices(self):
+    def test_request_email_edition_discloses_manual_private_link_and_preserves_old_notices(self):
         previous = {
             "2026-10-06-beta.20": {"terms-beta.md": "4955d9a44341531c91ff98355f5b94eb16f08a12be7353339d672c3a980b9d87", "privacy-beta.md": "0be4de6404485f8b7a1b12d66228fbb7779351b37cd6f3f792e52f7b9e3ee3dd"},
             "2026-10-06-public.6": {"terms-public.md": "a1eff5541097ea3d1c758301f315298b28c2e64bba9bccfcc83db0e6f4306aeb", "privacy-public.md": "cc4f1a0991e48e3554f892ea21a4fd5b5bc18fd8f70c0b1608d009782420e88a"},
+            "2026-10-10-beta.21": {"terms-beta.md": "8bff92d3f975ac9ce49443009097c5848868b8cf3f37d6e30f5a6eab07314002", "privacy-beta.md": "a3379ff7eaaae5144cbdb2055c925d61e430f20d21160e7331bec17f2bf0223e"},
+            "2026-10-10-public.7": {"terms-public.md": "2765d087b98ce4a9f20329b53a2fec2a764ea7d4a10d33d350f06b29941c0e2c", "privacy-public.md": "24b5a3fc32978dc9b7c4112a15925363016a8a08681d904c1367efa47d228db9"},
         }
         for edition, files in previous.items():
             for name, expected in files.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), expected)
+        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
         output = self.build()
         for route in ("privacy/index.html", "beta/privacy/index.html"):
             notice = normalized(" ".join(Page((output / route).read_text()).article))
             with self.subTest(route=route):
                 for statement in (
-                    "verify it with a short-lived code", "separate from your Apple sign-in",
-                    "not marketing or advertising", "administrator reviews", "data attachment",
+                    "An authenticated request records the email address",
+                    "separate from your Apple sign-in", "not marketing or advertising",
+                    "Recording the address does not verify the mailbox or prove account ownership",
+                    "do not automatically send verification codes or player data emails",
+                    "administrator reviews", "checks the intended recipient and account ownership",
+                    "prepare and download an email draft", "private, request-specific download link",
+                    "email contains no account-data attachment", "does not send an email",
+                    "check the recipient and link, and send manually",
                     "does not guarantee arrival in your inbox", "at most 30 days from preparation",
-                    "same expiry", "cannot recall an email", "until final deletion",
+                    "service environment, recorded recipient and exact prepared copy",
+                    "account is finally erased", "recipient or prepared copy changes",
+                    "forwarding it can disclose access to your account copy",
+                    "not automatically removed", "although download access ends",
+                    "cannot recall an email", "until final deletion",
+                    "Minimal received/prepared notifications to privacy@versava.net contain no export",
                 ):
                     self.assertIn(statement, notice)
-                self.assertNotIn("never public links or email attachments", notice)
+                for removed in (
+                    "verify it with a short-lived code", "to your verified address",
+                    "The approved attachment copy uses the same expiry",
+                ):
+                    self.assertNotIn(removed, notice)
+        for route in ("terms/index.html", "beta/terms/index.html"):
+            terms = normalized(" ".join(Page((output / route).read_text()).article))
+            with self.subTest(route=route):
+                self.assertIn("response and private download link, and send manually from their mail client", terms)
+                self.assertIn("Preparing an email draft does not send it", terms)
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
@@ -635,9 +660,9 @@ class LegalSiteTests(unittest.TestCase):
         self.assertFalse(any(urlsplit(target).netloc == "testflight.apple.com" for target in Page(source).targets))
 
     def test_current_versions_groups_matching_beta_policies_and_marks_release_not_released(self):
-        policy_bytes = {name: (self.root / name).read_bytes() for name in ("client-release.json", "internal/client-release.json")}
+        policy_bytes = {name: (self.root / name).read_bytes() for name in ("client-support.json", "internal/client-support.json")}
         output = self.build()
-        policy = load_client_release(self.root / "client-release.json")
+        policy = load_client_support(self.root / "client-support.json")
         source = (output / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
         self.assertEqual(beta.count('<h3>Current app policy</h3>'), 1)
@@ -645,14 +670,14 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("TestFlight Beta", beta)
         self.assertIn("Beta access is by invitation only", beta)
         self.assertIn(f'Latest supported</dt><dd>{policy["ios"]["latestVersion"]} · Build {policy["ios"]["latestBuild"]}', beta)
-        self.assertIn(f'Minimum supported</dt><dd>{policy["ios"]["minimumVersion"]} · Build {policy["ios"]["minimumBuild"]}', beta)
+        self.assertIn(f'Minimum version</dt><dd>{policy["ios"]["minimumVersion"]} · Build {policy["ios"]["minimumBuild"]}', beta)
         self.assertIn(f'Policy revision {policy["revision"]}', beta)
         self.assertIn("No Android version is listed", beta)
         self.assertIn("Not released yet", release)
         self.assertNotIn("Build ", release)
         self.assertNotIn("1.0.0", release)
         self.assert_no_testflight_invitation(source)
-        for target in ("/client-release.json", "/internal/client-release.json"):
+        for target in ("/client-support.json", "/internal/client-support.json"):
             self.assertEqual(Page(source).targets.count(target), 1)
         for name, expected in policy_bytes.items():
             self.assertEqual((self.root / name).read_bytes(), expected)
@@ -661,25 +686,25 @@ class LegalSiteTests(unittest.TestCase):
             self.assertIn("/versions/", Page((output / route).read_text()).targets)
 
     def test_current_versions_follows_policy_changes_without_hardcoded_build_numbers(self):
-        policy = load_client_release(self.root / "client-release.json")
+        policy = load_client_support(self.root / "client-support.json")
         policy["revision"] += 1
         policy["ios"].update(latestVersion="0.2.0", latestBuild=50, minimumVersion="0.1.0", minimumBuild=36)
-        for source in ("client-release.json", "internal/client-release.json"):
+        for source in ("client-support.json", "internal/client-support.json"):
             (self.root / source).write_text(json.dumps(policy))
         output = self.build()
         text = normalized((output / "versions/index.html").read_text())
         self.assertIn("Latest supported</dt><dd>0.2.0 · Build 50", text)
-        self.assertIn("Minimum supported</dt><dd>0.1.0 · Build 36", text)
+        self.assertIn("Minimum version</dt><dd>0.1.0 · Build 36", text)
         self.assertIn(f'Policy revision {policy["revision"]}', text)
 
     def test_current_versions_keeps_distinct_app_store_and_testflight_policies_separate(self):
-        beta_policy = load_client_release(self.root / "client-release.json")
+        beta_policy = load_client_support(self.root / "client-support.json")
         release_policy = json.loads(json.dumps(beta_policy))
         release_policy["revision"] += 1
         release_policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
                              updateUrl="https://apps.apple.com/app/id6817787046")
-        for release_path, beta_path in (("client-release.json", "internal/client-release.json"),
-                                        ("internal/client-release.json", "client-release.json")):
+        for release_path, beta_path in (("client-support.json", "internal/client-support.json"),
+                                        ("internal/client-support.json", "client-support.json")):
             with self.subTest(release_policy=release_path):
                 (self.root / release_path).write_text(json.dumps(release_policy))
                 (self.root / beta_path).write_text(json.dumps(beta_policy))
@@ -699,10 +724,10 @@ class LegalSiteTests(unittest.TestCase):
                 self.assert_no_testflight_invitation(source)
 
     def test_current_versions_groups_matching_app_store_policies_and_keeps_empty_beta_section(self):
-        policy = load_client_release(self.root / "client-release.json")
+        policy = load_client_support(self.root / "client-support.json")
         policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
                              updateUrl="https://apps.apple.com/app/id6817787046")
-        for name in ("client-release.json", "internal/client-release.json"):
+        for name in ("client-support.json", "internal/client-support.json"):
             (self.root / name).write_text(json.dumps(policy))
         source = (self.build() / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
@@ -713,16 +738,16 @@ class LegalSiteTests(unittest.TestCase):
         self.assertEqual(source.count('class="contact-card version-card"'), 1)
         self.assertIn("1.0.0 · Build 50", release)
         self.assertNotIn("Not released yet", release)
-        self.assertEqual(Page(release).targets, [policy["ios"]["updateUrl"], "/client-release.json", "/internal/client-release.json"])
+        self.assertEqual(Page(release).targets, [policy["ios"]["updateUrl"], "/client-support.json", "/internal/client-support.json"])
         self.assert_no_testflight_invitation(source)
 
     def test_current_versions_preserves_distinct_policies_within_the_same_channel(self):
         for channel, url in (("beta", "https://testflight.apple.com/join/CCCawA1Q"),
                              ("release", "https://apps.apple.com/app/id6817787046")):
             with self.subTest(channel=channel):
-                for name, version, build in (("client-release.json", "0.2.0", 50),
-                                             ("internal/client-release.json", "0.3.0", 51)):
-                    policy = load_client_release(self.root / name)
+                for name, version, build in (("client-support.json", "0.2.0", 50),
+                                             ("internal/client-support.json", "0.3.0", 51)):
+                    policy = load_client_support(self.root / name)
                     policy["revision"] = build
                     policy["ios"].update(latestVersion=version, latestBuild=build, updateUrl=url)
                     (self.root / name).write_text(json.dumps(policy))
@@ -736,9 +761,43 @@ class LegalSiteTests(unittest.TestCase):
                 for version, build in (("0.2.0", 50), ("0.3.0", 51)):
                     self.assertEqual(populated.count(f'Latest supported</dt><dd>{version} · Build {build}'), 1)
                     self.assertIn(f'Policy revision {build}', populated)
-                for target in ("/client-release.json", "/internal/client-release.json"):
+                for target in ("/client-support.json", "/internal/client-support.json"):
                     self.assertEqual(Page(populated).targets.count(target), 1)
                 self.assert_no_testflight_invitation(source)
+
+    def test_modern_latest_does_not_change_legacy_mandatory_policy(self):
+        legacy_before = {name: (self.root / name).read_bytes()
+                         for name in ("client-release.json", "internal/client-release.json")}
+        policy = load_client_support(self.root / "client-support.json")
+        policy["revision"] += 1
+        policy["ios"]["latestBuild"] += 1
+        for name in ("client-support.json", "internal/client-support.json"):
+            (self.root / name).write_text(json.dumps(policy))
+        output = self.build()
+        source = (output / "versions/index.html").read_text()
+        self.assertIn(f'Latest supported</dt><dd>0.1.0 · Build {policy["ios"]["latestBuild"]}', source)
+        self.assertIn("latest available update before continuing", source)
+        for name, raw in legacy_before.items():
+            self.assertEqual((output / name).read_bytes(), raw)
+
+    def test_versions_explains_minimum_blocked_range_and_optional_public_updates(self):
+        policy = load_client_support(self.root / "client-support.json")
+        policy["ios"].update(latestVersion="1.1.0", latestBuild=55,
+                             minimumVersion="1.0.0", minimumBuild=39,
+                             updateUrl="https://apps.apple.com/app/id6817787046", updatePolicy="optional",
+                             blockedRanges=[{"fromVersion": "1.0.0", "fromBuild": 40,
+                                             "throughVersion": "1.0.0", "throughBuild": 42,
+                                             "reason": "security"}])
+        (self.root / "client-support.json").write_text(json.dumps(policy))
+        source = (self.build() / "versions/index.html").read_text()
+        beta, release = self.version_sections(source)
+        self.assertIn("latest available update before continuing", beta)
+        self.assertIn("Compatible updates remain optional, with a reminder after 14 days", release)
+        self.assertIn("Minimum version</dt><dd>1.0.0 · Build 39", release)
+        self.assertIn("1.0.0 · Build 40 through 1.0.0 · Build 42, inclusive", release)
+        self.assertIn("Security issue. Upgrade required.", release)
+        self.assertIn("required immediately below the minimum supported version", source)
+        self.assert_no_testflight_invitation(source)
 
     def test_policy_metadata_cannot_redirect_publication_to_an_unreviewed_file(self):
         manifest_path = self.root / "legal" / self.edition / "manifest.json"
