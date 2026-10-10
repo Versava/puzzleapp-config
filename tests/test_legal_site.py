@@ -619,20 +619,44 @@ class LegalSiteTests(unittest.TestCase):
                     if uri.fragment:
                         self.assertIn(uri.fragment, page.ids)
 
-    def test_current_versions_labels_matching_testflight_policies_without_a_public_release_claim(self):
+    def version_sections(self, source):
+        beta_marker = '<section class="support-section" aria-labelledby="beta-versions">'
+        release_marker = '<section class="support-section" aria-labelledby="release-versions">'
+        self.assertEqual(source.count(beta_marker), 1)
+        self.assertEqual(source.count(release_marker), 1)
+        beta, release = source.split(beta_marker, 1)[1].split(release_marker, 1)
+        self.assertIn('<h2 id="beta-versions">Beta</h2>', beta)
+        self.assertIn('<h2 id="release-versions">Release</h2>', release)
+        return beta, release.split('</main>', 1)[0]
+
+    def assert_no_testflight_invitation(self, source):
+        self.assertNotIn("Open TestFlight", source)
+        self.assertNotIn("testflight.apple.com", source)
+        self.assertFalse(any(urlsplit(target).netloc == "testflight.apple.com" for target in Page(source).targets))
+
+    def test_current_versions_groups_matching_beta_policies_and_marks_release_not_released(self):
+        policy_bytes = {name: (self.root / name).read_bytes() for name in ("client-release.json", "internal/client-release.json")}
         output = self.build()
         policy = load_client_release(self.root / "client-release.json")
         source = (output / "versions/index.html").read_text()
-        text = normalized(source)
-        self.assertEqual(text.count('<h2>Current app policy</h2>'), 1)
-        self.assertIn("TestFlight Beta", text)
-        self.assertIn(f'Latest supported</dt><dd>{policy["ios"]["latestVersion"]} · Build {policy["ios"]["latestBuild"]}', text)
-        self.assertIn(f'Minimum supported</dt><dd>{policy["ios"]["minimumVersion"]} · Build {policy["ios"]["minimumBuild"]}', text)
-        self.assertIn(f'Policy revision {policy["revision"]}', text)
-        self.assertIn("A public App Store release is not listed here", text)
-        self.assertIn("No Android version is listed", text)
-        for target in (policy["ios"]["updateUrl"], "/client-release.json", "/internal/client-release.json"):
-            self.assertIn(target, Page(source).targets)
+        beta, release = self.version_sections(source)
+        self.assertEqual(beta.count('<h3>Current app policy</h3>'), 1)
+        self.assertEqual(source.count('class="contact-card version-card"'), 1)
+        self.assertIn("TestFlight Beta", beta)
+        self.assertIn("Beta access is by invitation only", beta)
+        self.assertIn(f'Latest supported</dt><dd>{policy["ios"]["latestVersion"]} · Build {policy["ios"]["latestBuild"]}', beta)
+        self.assertIn(f'Minimum supported</dt><dd>{policy["ios"]["minimumVersion"]} · Build {policy["ios"]["minimumBuild"]}', beta)
+        self.assertIn(f'Policy revision {policy["revision"]}', beta)
+        self.assertIn("No Android version is listed", beta)
+        self.assertIn("Not released yet", release)
+        self.assertNotIn("Build ", release)
+        self.assertNotIn("1.0.0", release)
+        self.assert_no_testflight_invitation(source)
+        for target in ("/client-release.json", "/internal/client-release.json"):
+            self.assertEqual(Page(source).targets.count(target), 1)
+        for name, expected in policy_bytes.items():
+            self.assertEqual((self.root / name).read_bytes(), expected)
+            self.assertEqual((output / name).read_bytes(), expected)
         for route in ("index.html", "beta/index.html", "support/index.html"):
             self.assertIn("/versions/", Page((output / route).read_text()).targets)
 
@@ -649,20 +673,72 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn(f'Policy revision {policy["revision"]}', text)
 
     def test_current_versions_keeps_distinct_app_store_and_testflight_policies_separate(self):
+        beta_policy = load_client_release(self.root / "client-release.json")
+        release_policy = json.loads(json.dumps(beta_policy))
+        release_policy["revision"] += 1
+        release_policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
+                             updateUrl="https://apps.apple.com/app/id6817787046")
+        for release_path, beta_path in (("client-release.json", "internal/client-release.json"),
+                                        ("internal/client-release.json", "client-release.json")):
+            with self.subTest(release_policy=release_path):
+                (self.root / release_path).write_text(json.dumps(release_policy))
+                (self.root / beta_path).write_text(json.dumps(beta_policy))
+                source = (self.build() / "versions/index.html").read_text()
+                beta, release = self.version_sections(source)
+                self.assertEqual(source.count('class="contact-card version-card"'), 2)
+                self.assertIn("TestFlight Beta", beta)
+                self.assertIn("Beta access is by invitation only", beta)
+                self.assertNotIn("1.0.0 · Build 50", beta)
+                self.assertIn("App Store update policy", release)
+                self.assertIn("1.0.0 · Build 50", release)
+                self.assertNotIn("TestFlight Beta", release)
+                self.assertNotIn("Not released yet", release)
+                self.assertIn(release_policy["ios"]["updateUrl"], Page(release).targets)
+                self.assertEqual(Page(beta).targets, ["/" + beta_path])
+                self.assertIn("/" + release_path, Page(release).targets)
+                self.assert_no_testflight_invitation(source)
+
+    def test_current_versions_groups_matching_app_store_policies_and_keeps_empty_beta_section(self):
         policy = load_client_release(self.root / "client-release.json")
-        policy["revision"] += 1
         policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
                              updateUrl="https://apps.apple.com/app/id6817787046")
-        (self.root / "client-release.json").write_text(json.dumps(policy))
-        output = self.build()
-        source = (output / "versions/index.html").read_text()
-        self.assertIn("<h2>App policy</h2>", source)
-        self.assertIn("<h2>Internal app policy</h2>", source)
-        self.assertIn("App Store update policy", source)
-        self.assertIn("TestFlight Beta", source)
-        self.assertIn("1.0.0 · Build 50", source)
-        self.assertIn(policy["ios"]["updateUrl"], Page(source).targets)
-        self.assertNotIn("public App Store release is available", source)
+        for name in ("client-release.json", "internal/client-release.json"):
+            (self.root / name).write_text(json.dumps(policy))
+        source = (self.build() / "versions/index.html").read_text()
+        beta, release = self.version_sections(source)
+        self.assertIn("No Beta version is listed", beta)
+        self.assertIn("Beta access is by invitation only", beta)
+        self.assertNotIn("Build ", beta)
+        self.assertEqual(release.count('<h3>Current app policy</h3>'), 1)
+        self.assertEqual(source.count('class="contact-card version-card"'), 1)
+        self.assertIn("1.0.0 · Build 50", release)
+        self.assertNotIn("Not released yet", release)
+        self.assertEqual(Page(release).targets, [policy["ios"]["updateUrl"], "/client-release.json", "/internal/client-release.json"])
+        self.assert_no_testflight_invitation(source)
+
+    def test_current_versions_preserves_distinct_policies_within_the_same_channel(self):
+        for channel, url in (("beta", "https://testflight.apple.com/join/CCCawA1Q"),
+                             ("release", "https://apps.apple.com/app/id6817787046")):
+            with self.subTest(channel=channel):
+                for name, version, build in (("client-release.json", "0.2.0", 50),
+                                             ("internal/client-release.json", "0.3.0", 51)):
+                    policy = load_client_release(self.root / name)
+                    policy["revision"] = build
+                    policy["ios"].update(latestVersion=version, latestBuild=build, updateUrl=url)
+                    (self.root / name).write_text(json.dumps(policy))
+                source = (self.build() / "versions/index.html").read_text()
+                beta, release = self.version_sections(source)
+                populated, empty = (beta, release) if channel == "beta" else (release, beta)
+                self.assertEqual(populated.count('class="contact-card version-card"'), 2)
+                self.assertNotIn('class="contact-card version-card"', empty)
+                for label in ("App policy", "Internal app policy"):
+                    self.assertEqual(populated.count(f'<h3>{label}</h3>'), 1)
+                for version, build in (("0.2.0", 50), ("0.3.0", 51)):
+                    self.assertEqual(populated.count(f'Latest supported</dt><dd>{version} · Build {build}'), 1)
+                    self.assertIn(f'Policy revision {build}', populated)
+                for target in ("/client-release.json", "/internal/client-release.json"):
+                    self.assertEqual(Page(populated).targets.count(target), 1)
+                self.assert_no_testflight_invitation(source)
 
     def test_policy_metadata_cannot_redirect_publication_to_an_unreviewed_file(self):
         manifest_path = self.root / "legal" / self.edition / "manifest.json"
