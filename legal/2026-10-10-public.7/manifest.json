@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "edition": "2026-10-10-public.7",
+  "channel": "public",
+  "documents": {
+    "terms": {
+      "file": "terms-public.md",
+      "sha256": "2765d087b98ce4a9f20329b53a2fec2a764ea7d4a10d33d350f06b29941c0e2c"
+    },
+    "privacy": {
+      "file": "privacy-public.md",
+      "sha256": "24b5a3fc32978dc9b7c4112a15925363016a8a08681d904c1367efa47d228db9"
+    }
+  }
+}

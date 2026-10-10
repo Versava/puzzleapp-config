@@ -82,7 +82,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.20")
+        self.assertEqual(self.edition, "2026-10-10-beta.21")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -103,8 +103,8 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.20")
-        self.assertEqual(self.current["publicEdition"], "2026-10-06-public.6")
+        self.assertEqual(self.edition, "2026-10-10-beta.21")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.7")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -193,7 +193,7 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.20")
+        self.assertEqual(self.edition, "2026-10-10-beta.21")
         output = self.build()
         current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
@@ -402,7 +402,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-06-beta.20")
+        self.assertEqual(self.edition, "2026-10-10-beta.21")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -450,7 +450,7 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-06-public.6")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.7")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
@@ -571,6 +571,27 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("Test records and access are not guaranteed to transfer", beta_terms)
         self.assertIn("testers cannot opt out", beta_privacy)
         self.assertIn("do not share those reports with third parties", beta_privacy)
+
+    def test_request_email_edition_discloses_verified_recipient_and_preserves_old_notices(self):
+        previous = {
+            "2026-10-06-beta.20": {"terms-beta.md": "4955d9a44341531c91ff98355f5b94eb16f08a12be7353339d672c3a980b9d87", "privacy-beta.md": "0be4de6404485f8b7a1b12d66228fbb7779351b37cd6f3f792e52f7b9e3ee3dd"},
+            "2026-10-06-public.6": {"terms-public.md": "a1eff5541097ea3d1c758301f315298b28c2e64bba9bccfcc83db0e6f4306aeb", "privacy-public.md": "cc4f1a0991e48e3554f892ea21a4fd5b5bc18fd8f70c0b1608d009782420e88a"},
+        }
+        for edition, files in previous.items():
+            for name, expected in files.items():
+                self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), expected)
+        output = self.build()
+        for route in ("privacy/index.html", "beta/privacy/index.html"):
+            notice = normalized(" ".join(Page((output / route).read_text()).article))
+            with self.subTest(route=route):
+                for statement in (
+                    "verify it with a short-lived code", "separate from your Apple sign-in",
+                    "not marketing or advertising", "administrator reviews", "data attachment",
+                    "does not guarantee arrival in your inbox", "at most 30 days from preparation",
+                    "same expiry", "cannot recall an email", "until final deletion",
+                ):
+                    self.assertIn(statement, notice)
+                self.assertNotIn("never public links or email attachments", notice)
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
