@@ -1,3 +1,16 @@
+# Prepared Beta.23 website alignment — 19 October 2026
+
+Beta build **1.0.0 (46)** bundles the existing **2026-10-14-beta.23** Terms
+and Privacy Notice. This preparation publishes their exact frozen source bytes
+and checksum manifest, and advances only the website's Beta current-edition
+pointer so `/beta/terms/` and `/beta/privacy/` match that build.
+
+Public remains **2026-10-10-public.8**. Public.9, earlier legal editions, client
+support/release policies, generator schedules and Android settings remain
+unchanged. This is Beta notice alignment; it does not publish a native build
+or announce a public App Store release. Native TestFlight availability and the
+later required-update policy remain separate release steps.
+
 # Prepared release support policy — 10 October 2026
 
 The modern Git-backed API documents are `/client-support.json` and

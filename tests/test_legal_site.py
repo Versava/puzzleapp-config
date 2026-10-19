@@ -83,7 +83,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.edition, "2026-10-14-beta.23")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -104,7 +104,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.edition, "2026-10-14-beta.23")
         self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
@@ -194,7 +194,7 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.edition, "2026-10-14-beta.23")
         output = self.build()
         current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
@@ -403,7 +403,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.edition, "2026-10-14-beta.23")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -583,7 +583,7 @@ class LegalSiteTests(unittest.TestCase):
         for edition, files in previous.items():
             for name, expected in files.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), expected)
-        self.assertEqual(self.edition, "2026-10-10-beta.22")
+        self.assertEqual(self.edition, "2026-10-14-beta.23")
         self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
         output = self.build()
         for route in ("privacy/index.html", "beta/privacy/index.html"):
@@ -617,6 +617,33 @@ class LegalSiteTests(unittest.TestCase):
             with self.subTest(route=route):
                 self.assertIn("response and private download link, and send manually from their mail client", terms)
                 self.assertIn("Preparing an email draft does not send it", terms)
+
+    def test_beta_23_matches_the_frozen_notice_and_keeps_public_8_and_beta_22(self):
+        self.assertEqual(self.current["betaEdition"], "2026-10-14-beta.23")
+        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
+        expected = {
+            "2026-10-14-beta.23": {
+                "terms-beta.md": "51293d48a8caea613e66a1f02507a496044e1aa1a9cec57b1f84f57d465db5a7",
+                "privacy-beta.md": "75cffa3fbf955d4c950d7dcbd9b8895ba45e67d228b0ba3a980946bdbe3fc618",
+            },
+            "2026-10-10-beta.22": {
+                "terms-beta.md": "311ad4df9b19960564d9a3508ad6ec3c577c98f1c6e43d12a04f249a8ab03394",
+                "privacy-beta.md": "edff7b3443fa209c577347d5feca6517c970217bbc48d5c53c88406cfab9b0c4",
+            },
+        }
+        output = self.build()
+        for edition, files in expected.items():
+            for name, expected_hash in files.items():
+                with self.subTest(edition=edition, name=name):
+                    raw = (self.root / "legal" / edition / name).read_bytes()
+                    self.assertEqual(hashlib.sha256(raw).hexdigest(), expected_hash)
+                    self.assertEqual((output / "legal" / edition / name).read_bytes(), raw)
+        for kind in ("terms", "privacy"):
+            alias = (output / f"beta/{kind}/index.html").read_text()
+            retained = (output / f"legal/2026-10-14-beta.23/{kind}/index.html").read_text()
+            self.assertEqual(normalized("".join(Page(alias).article)),
+                             normalized("".join(Page(retained).article)))
+        self.assertFalse((output / "legal/2026-10-14-public.9").exists())
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
