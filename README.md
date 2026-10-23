@@ -1,11 +1,63 @@
-# Prepared Beta.23 website alignment — 19 October 2026
+# Approved legal publication — 23 October 2026
+
+This publication contains approved Beta.24 and Public.10. Current public product and
+legal copy omit testing-programme references; direct tester documents remain
+available. Public navigation has no testing-document entry links, while Versions
+retains Beta and Release status separately. The entire Terms use supported
+sign-in methods, applicable stores or payment providers and offer-defined
+benefits, without checkout-screen promises or implementation tutorials.
+Existing paid and deletion commitments and required disclosures remain.
+Existing issued editions remain unchanged. Both current editions are frozen
+for exact website and native-app source verification.
+
+## JSON legal information
+
+The static build derives versioned JSON bundles directly from the validated,
+retained Markdown editions. `/legal/v1/public.json` and `/legal/v1/beta.json`
+discover the current agreement for their respective channel. The corresponding
+`/legal/v1/editions/<edition>.json` contains identical bytes and remains bound to
+that exact edition. Testing links stay outside public navigation. Historical
+Alpha editions remain available through their exact edition URLs.
+
+Each schema-1 response includes its channel, edition, and both Terms and Privacy
+documents with their titles, `markdown` format, complete source text, SHA-256
+checksums, and canonical HTTPS source and reading URLs. The contract is published
+at `/legal-info.schema.json`. JSON text preserves every Markdown byte after UTF-8
+encoding, including trailing newlines; hashes describe that Markdown rather than
+the JSON envelope. Generation is deterministic and rejects a document exceeding
+256 KiB or a JSON bundle exceeding 1 MiB before replacing existing build output.
+
+Current aliases use five-minute revalidation. Exact edition responses use a
+one-year immutable cache, with public CORS and JSON MIME headers. Existing
+`/legal/current.json`, edition manifests, and retained Markdown sources keep
+their existing formats and bytes. Apps must validate the selected channel,
+edition, document URLs and hashes; a discovery alias changing does not itself
+replace an accepted agreement. Publication is verified against the canonical
+HTTPS responses separately from the source commit.
+
+## Draft and issued reader labels
+
+`legal/reader-drafts.json` is a build-only display control. Its schema-1
+`publicDraftEditions` list is empty for this approved publication, so Public.10
+readers show their version label and permanent edition link.
+Only the current public edition can be listed; unknown, testing, historical or
+duplicate entries fail the build before existing output is replaced. This file
+is not copied into the website and does not change any Markdown, manifest,
+edition identifier, checksum or JSON legal response.
+
+For an issued edition, keep `publicDraftEditions` empty. Selecting a later
+public draft requires updating
+the current edition pointer and this explicit list together; a new current
+edition is never assumed to be a draft.
+
+# Retained Beta.23 website alignment — 19 October 2026
 
 Beta build **1.0.0 (46)** bundles the existing **2026-10-14-beta.23** Terms
 and Privacy Notice. This preparation publishes their exact frozen source bytes
 and checksum manifest, and advances only the website's Beta current-edition
 pointer so `/beta/terms/` and `/beta/privacy/` match that build.
 
-Public remains **2026-10-10-public.8**. Public.9, earlier legal editions, client
+At this checkpoint Public remained **2026-10-10-public.8**. Public.9, earlier legal editions, client
 support/release policies, generator schedules and Android settings remain
 unchanged. This is Beta notice alignment; it does not publish a native build
 or announce a public App Store release. Native TestFlight availability and the
@@ -416,6 +468,14 @@ configuration; none of it belongs in this public repository.
 
 ## Website and legal channels
 
+Public navigation links only to current public documents and support. Beta and
+version pages remain available through direct app or invitation links. The legal
+index links only to current Terms and Privacy; there is no public history listing.
+Previously issued sources and direct reading routes are retained. Issued public
+readers display the version and update date; edition identifiers remain in source metadata.
+This is a navigation choice, not access control; direct version information still
+shows Beta and Release separately.
+
 The website uses the app's paper and sage colours, shared navigation,
 responsive reading panels, section links, and direct email support. It is static
 HTML, CSS, and SVG: no source JavaScript, analytics, remote fonts, or additional
@@ -431,7 +491,7 @@ application server. The authenticated content studio stays separate.
 | `/alpha/terms/`, `/alpha/privacy/` | Historical Alpha edition, with original source and title. |
 | `/support/` | Support/privacy contact and company address. |
 | `/app-ads.txt` | Exact direct Google seller declaration copied from the owned AdMob account. |
-| `/legal/` | Retained public and testing editions. |
+| `/legal/` | Current public Terms and Privacy links. |
 | `/legal/<edition>/terms/`, `/legal/<edition>/privacy/` | Permanent edition-specific reading pages. |
 | `/legal/<edition>/manifest.json` | Edition identity, channel, and exact source SHA-256 pins. |
 

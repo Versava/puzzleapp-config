@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://puzzle.versava.net/legal-info.schema.json",
+  "title": "Daily Pause legal information bundle",
+  "description": "A retained legal edition. Text is exact UTF-8 Markdown, limited to 256 KiB per document and 1 MiB for the JSON response. Current aliases select an edition; acceptance remains bound to the exact edition and document hashes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "channel", "edition", "documents"],
+  "properties": {
+    "schemaVersion": {"const": 1, "type": "integer"},
+    "channel": {"enum": ["alpha", "beta", "public"]},
+    "edition": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$"},
+    "documents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terms", "privacy"],
+      "properties": {
+        "terms": {"$ref": "#/$defs/document"},
+        "privacy": {"$ref": "#/$defs/document"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"channel": {"const": "alpha"}}},
+      "then": {"properties": {"edition": {"pattern": "-alpha\\."}}}
+    },
+    {
+      "if": {"properties": {"channel": {"const": "beta"}}},
+      "then": {"properties": {"edition": {"pattern": "-beta\\."}}}
+    },
+    {
+      "if": {"properties": {"channel": {"const": "public"}}},
+      "then": {"properties": {"edition": {"pattern": "-public\\."}}}
+    }
+  ],
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "format", "text", "sourceUrl", "readerUrl", "sha256"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 256},
+        "format": {"const": "markdown"},
+        "text": {"type": "string", "minLength": 1, "maxLength": 262144},
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://puzzle\\.versava\\.net/legal/[a-z0-9][a-z0-9.-]{0,63}/(?:terms|privacy)-(?:alpha|beta|public)\\.md$"
+        },
+        "readerUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://puzzle\\.versava\\.net/legal/[a-z0-9][a-z0-9.-]{0,63}/(?:terms|privacy)/$"
+        },
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from check_release import check_release
-from legal_site import FILES, load_editions, render_document
+from legal_site import FILES, MAX_LEGAL_INFO_BYTES, MAX_LEGAL_SOURCE_BYTES, load_editions, load_reader_drafts, render_document, render_legal_info
 from validate_client_release import load as load_client_release
 from validate_client_support import load as load_client_support
 
@@ -64,7 +64,7 @@ class LegalSiteTests(unittest.TestCase):
         self.root = Path(temporary.name) / "source"
         self.root.mkdir()
         for name in (
-            "manifest.json", "manifest.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "legal-info.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg",
         ):
             shutil.copyfile(ROOT / name, self.root / name)
@@ -83,7 +83,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-14-beta.23")
+        self.assertEqual(self.edition, "2026-10-22-beta.24")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -104,8 +104,8 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-14-beta.23")
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
+        self.assertEqual(self.edition, "2026-10-22-beta.24")
+        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -134,13 +134,129 @@ class LegalSiteTests(unittest.TestCase):
         )
         return self.root / "dist"
 
+    def test_legal_json_contains_exact_verified_sources_for_every_retained_edition(self):
+        previous_sources = {
+            str(path.relative_to(self.root)): path.read_bytes()
+            for path in (self.root / "legal").rglob("*") if path.is_file()
+        }
+        output = self.build()
+        for edition, (manifest, _) in self.editions.items():
+            channel = manifest["channel"]
+            path = output / f"legal/v1/editions/{edition}.json"
+            raw = path.read_bytes()
+            payload = json.loads(raw)
+            with self.subTest(edition=edition):
+                self.assertLessEqual(len(raw), MAX_LEGAL_INFO_BYTES)
+                self.assertEqual(set(payload), {"schemaVersion", "channel", "edition", "documents"})
+                self.assertEqual(type(payload["schemaVersion"]), int)
+                self.assertEqual(payload["schemaVersion"], 1)
+                self.assertEqual(payload["channel"], channel)
+                self.assertEqual(payload["edition"], edition)
+                self.assertEqual(set(payload["documents"]), {"terms", "privacy"})
+                for kind, filename in FILES[channel].items():
+                    document = payload["documents"][kind]
+                    source = self.root / "legal" / edition / filename
+                    source_bytes = source.read_bytes()
+                    self.assertEqual(set(document), {"title", "format", "text", "sourceUrl", "readerUrl", "sha256"})
+                    self.assertEqual(document["title"], source_bytes.decode("utf-8").splitlines()[0][2:])
+                    self.assertEqual(document["format"], "markdown")
+                    self.assertEqual(document["text"].encode("utf-8"), source_bytes)
+                    self.assertEqual(document["sha256"], hashlib.sha256(source_bytes).hexdigest())
+                    self.assertEqual(document["sha256"], manifest["documents"][kind]["sha256"])
+                    self.assertEqual(document["sourceUrl"], f"https://puzzle.versava.net/legal/{edition}/{filename}")
+                    self.assertEqual(document["readerUrl"], f"https://puzzle.versava.net/legal/{edition}/{kind}/")
+                    for key in ("sourceUrl", "readerUrl"):
+                        relative = urlsplit(document[key]).path.lstrip("/")
+                        target = output / relative
+                        if relative.endswith("/"):
+                            target /= "index.html"
+                        self.assertTrue(target.is_file())
+        for relative, original in previous_sources.items():
+            self.assertEqual((self.root / relative).read_bytes(), original)
+
+    def test_current_legal_json_aliases_are_deterministic_and_channel_specific(self):
+        generated = render_legal_info(self.current, self.editions)
+        self.assertEqual(generated, render_legal_info(self.current, self.editions))
+        output = self.build()
+        for channel in ("public", "beta"):
+            edition = self.current[f"{channel}Edition"]
+            alias = f"legal/v1/{channel}.json"
+            with self.subTest(channel=channel):
+                self.assertEqual(generated[alias], generated[f"legal/v1/editions/{edition}.json"])
+                self.assertEqual((output / alias).read_bytes(), generated[alias])
+                payload = json.loads(generated[alias])
+                self.assertEqual(payload["channel"], channel)
+                self.assertEqual(payload["edition"], edition)
+                for kind, document in payload["documents"].items():
+                    self.assertTrue(document["sourceUrl"].endswith(f"/{kind}-{channel}.md"))
+        self.assertNotIn("legal/v1/alpha.json", generated)
+        first = {str(path.relative_to(output)): path.read_bytes() for path in (output / "legal/v1").rglob("*.json")}
+        output = self.build()
+        self.assertEqual(first, {str(path.relative_to(output)): path.read_bytes() for path in (output / "legal/v1").rglob("*.json")})
+
+    def test_legal_json_schema_and_headers_are_published_without_changing_security(self):
+        output = self.build()
+        schema = json.loads((output / "legal-info.schema.json").read_bytes())
+        self.assertEqual(schema["$id"], "https://puzzle.versava.net/legal-info.schema.json")
+        self.assertEqual(schema["required"], ["schemaVersion", "channel", "edition", "documents"])
+        self.assertFalse(schema["additionalProperties"])
+        self.assertFalse(schema["properties"]["documents"]["additionalProperties"])
+        self.assertFalse(schema["$defs"]["document"]["additionalProperties"])
+        headers = (output / "_headers").read_text()
+        self.assertIn("/*\n  Access-Control-Allow-Origin: *", headers)
+        self.assertIn("Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'", headers)
+        for channel in ("public", "beta"):
+            self.assertIn(f"/legal/v1/{channel}.json\n  Content-Type: application/json; charset=utf-8\n  Cache-Control: public, max-age=300, must-revalidate", headers)
+        self.assertIn("/legal/v1/editions/*.json\n  Content-Type: application/json; charset=utf-8\n  Cache-Control: public, max-age=31536000, immutable", headers)
+        self.assertIn("/legal-info.schema.json\n  Content-Type: application/schema+json; charset=utf-8", headers)
+
+    def replace_current_terms(self, text):
+        folder = self.root / "legal" / self.edition
+        (folder / "terms-beta.md").write_bytes(text.encode("utf-8"))
+        path = folder / "manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["documents"]["terms"]["sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        path.write_text(json.dumps(manifest))
+
+    def test_invalid_legal_json_source_sizes_and_titles_preserve_previous_output(self):
+        output = self.build()
+        previous = (output / "legal/v1/beta.json").read_bytes()
+        original = (self.root / "legal" / self.edition / "terms-beta.md").read_text()
+        cases = (
+            ("Invalid legal source size", original + "x" * MAX_LEGAL_SOURCE_BYTES),
+            ("Legal source must start with a document title", original.replace("# ", "", 1)),
+            ("Legal JSON bundle exceeds its size limit", original + "\x00" * 200_000),
+        )
+        for message, changed in cases:
+            with self.subTest(message=message):
+                self.replace_current_terms(changed)
+                completed = subprocess.run([sys.executable, "scripts/build.py"], cwd=self.root, capture_output=True)
+                self.assertNotEqual(completed.returncode, 0)
+                self.assertIn(message, completed.stderr.decode())
+                self.assertEqual((output / "legal/v1/beta.json").read_bytes(), previous)
+
+    def test_cross_channel_current_pointer_cannot_publish_a_legal_json_alias(self):
+        output = self.build()
+        previous = (output / "legal/v1/beta.json").read_bytes()
+        changed = dict(self.current, betaEdition=self.current["publicEdition"])
+        (self.root / "legal/current.json").write_text(json.dumps(changed))
+        with self.assertRaisesRegex(ValueError, "Current beta edition is missing or uses another channel"):
+            load_editions(self.root)
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.build()
+        self.assertEqual((output / "legal/v1/beta.json").read_bytes(), previous)
+
     def test_actual_frozen_documents_preserve_all_words_in_every_reading_route(self):
         output = self.build()
+        reader_drafts = load_reader_drafts(self.root, self.current, self.editions)
         for edition, (manifest, _) in self.editions.items():
             channel = manifest["channel"]
             for kind, filename in FILES[channel].items():
                 source = (self.root / "legal" / edition / filename).read_text()
-                expected = normalized(re.sub(r"^(?:#{1,3}|-) ", "", source, flags=re.M))
+                if channel == "public" and edition in reader_drafts:
+                    source = re.sub(r"^Version: [^\n]+ · Updated: (.+)$", r"Updated: \1", source, flags=re.M)
+                visible_source = source.replace("[account help](https://puzzle.versava.net/support/)", "account help")
+                expected = normalized(re.sub(r"^(?:#{1,3}|-) ", "", visible_source, flags=re.M))
                 routes = [f"legal/{edition}/{kind}"]
                 if self.current[f"{channel}Edition"] == edition:
                     routes.append(kind if channel == "public" else f"{channel}/{kind}")
@@ -151,11 +267,181 @@ class LegalSiteTests(unittest.TestCase):
                         self.assertEqual(normalized("".join(page.article)), expected)
                         self.assertEqual(len(page.ids), len(set(page.ids)))
                         self.assertIn(f'data-policy-channel="{channel}"', content)
+                        self.assertIn(f'data-policy-edition="{edition}"', content)
                         self.assertEqual('content="noindex, follow"' in content, channel != "public")
                         self.assertIn(f'<title>{source.splitlines()[0][2:]} | Daily Pause</title>', content)
         # Public URLs are independent agreements, never aliases of test terms.
         self.assertIn('Daily Pause Terms of Use', (output / "terms/index.html").read_text())
         self.assertNotIn('data-policy-channel="beta"', (output / "terms/index.html").read_text())
+
+    def test_public_navigation_cannot_reach_testing_documents(self):
+        output = self.build()
+
+        def testing_route(path):
+            return path.startswith(("/beta/", "/alpha/")) or any(
+                path.startswith(f"/legal/{edition}/")
+                for edition, (manifest, _) in self.editions.items()
+                if manifest["channel"] != "public"
+            )
+
+        for path in output.rglob("*.html"):
+            route = "/" + path.relative_to(output).as_posix()
+            if testing_route(route):
+                continue
+            for target in Page(path.read_text()).targets:
+                uri = urlsplit(target)
+                if uri.scheme not in ("", "http", "https") or uri.netloc not in ("", "puzzle.versava.net"):
+                    continue
+                with self.subTest(page=route, target=target):
+                    self.assertFalse(testing_route(uri.path))
+
+        documents = Page((output / "legal/index.html").read_text()).targets
+        self.assertIn("/terms/", documents)
+        self.assertIn("/privacy/", documents)
+        for edition in self.editions:
+            self.assertNotIn(f"/legal/{edition}/", documents)
+
+    def test_testing_documents_stay_available_through_direct_links(self):
+        output = self.build()
+        for channel in ("beta", "alpha"):
+            for kind in ("terms", "privacy"):
+                route = f"{channel}/{kind}/index.html"
+                source = (output / route).read_text()
+                self.assertIn(f'data-policy-channel="{channel}"', source)
+                self.assertIn('content="noindex, follow"', source)
+                self.assertIn(self.current[f"{channel}Edition"], source)
+        beta = Page((output / "beta/index.html").read_text()).targets
+        self.assertIn("/beta/terms/", beta)
+        self.assertIn("/beta/privacy/", beta)
+
+    def test_current_public_product_and_legal_copy_has_no_testing_references(self):
+        output = self.build()
+        edition = self.current["publicEdition"]
+        routes = (
+            "index.html", "404.html", "support/index.html",
+            "terms/index.html", "privacy/index.html",
+            f"legal/{edition}/terms/index.html", f"legal/{edition}/privacy/index.html",
+        )
+        for route in routes:
+            with self.subTest(route=route):
+                content = (output / route).read_text()
+                self.assertNotRegex(content, re.compile(r"\b(?:Beta|TestFlight)\b", re.I))
+        self.assertEqual(load_reader_drafts(self.root, self.current, self.editions), set())
+        for kind in ("terms", "privacy"):
+            current = (output / f"{kind}/index.html").read_text()
+            self.assertIn(f"Version: {edition}", "".join(Page(current).article))
+
+    def test_only_explicit_current_public_draft_hides_reader_version(self):
+        edition = self.current["publicEdition"]
+        (self.root / "legal/reader-drafts.json").write_text(json.dumps({
+            "schemaVersion": 1, "publicDraftEditions": [edition],
+        }))
+        self.assertEqual(load_reader_drafts(self.root, self.current, self.editions), {edition})
+        output = self.build()
+        for kind in ("terms", "privacy"):
+            for route in (f"{kind}/index.html", f"legal/{edition}/{kind}/index.html"):
+                with self.subTest(route=route):
+                    content = (output / route).read_text()
+                    article = "".join(Page(content).article)
+                    self.assertIn("Updated:", article)
+                    self.assertNotIn("Version:", article)
+                    self.assertNotIn("Permanent link to this edition", content)
+                    self.assertIn(f'data-policy-edition="{edition}"', content)
+        for retained, (manifest, _) in self.editions.items():
+            if manifest["channel"] == "public" and retained != edition:
+                content = (output / f"legal/{retained}/terms/index.html").read_text()
+                self.assertIn(f"Version: {retained}", "".join(Page(content).article))
+                self.assertIn("Permanent link to this edition", content)
+        self.assertFalse((output / "legal/reader-drafts.json").exists())
+
+    def test_issued_current_public_readers_restore_version_without_changing_legal_json(self):
+        (self.root / "legal/reader-drafts.json").write_text(json.dumps({
+            "schemaVersion": 1, "publicDraftEditions": [self.current["publicEdition"]],
+        }))
+        output = self.build()
+        before_json = (output / "legal/v1/public.json").read_bytes()
+        before_manifest = (output / f'legal/{self.current["publicEdition"]}/manifest.json').read_bytes()
+        (self.root / "legal/reader-drafts.json").write_text(json.dumps({
+            "schemaVersion": 1, "publicDraftEditions": [],
+        }))
+        output = self.build()
+        edition = self.current["publicEdition"]
+        for kind in ("terms", "privacy"):
+            for route in (f"{kind}/index.html", f"legal/{edition}/{kind}/index.html"):
+                with self.subTest(route=route):
+                    content = (output / route).read_text()
+                    self.assertIn(f"Version: {edition}", "".join(Page(content).article))
+                    self.assertIn(f'href="/legal/{edition}/{kind}/">Permanent link to this edition</a>', content)
+        self.assertEqual((output / "legal/v1/public.json").read_bytes(), before_json)
+        self.assertEqual((output / f"legal/{edition}/manifest.json").read_bytes(), before_manifest)
+
+    def test_later_current_public_edition_is_not_implicitly_a_draft(self):
+        previous = self.current["publicEdition"]
+        edition = "2026-10-23-public.11"
+        folder = self.root / "legal" / edition
+        folder.mkdir()
+        manifest = dict(self.editions[previous][0], edition=edition, documents={})
+        for kind, text in self.editions[previous][1].items():
+            text = text.replace(f"Version: {previous}", f"Version: {edition}", 1)
+            filename = FILES["public"][kind]
+            data = text.encode("utf-8")
+            (folder / filename).write_bytes(data)
+            manifest["documents"][kind] = {"file": filename, "sha256": hashlib.sha256(data).hexdigest()}
+        (folder / "manifest.json").write_text(json.dumps(manifest))
+        (self.root / "legal/current.json").write_text(json.dumps(dict(self.current, publicEdition=edition)))
+        (self.root / "legal/reader-drafts.json").write_text(json.dumps({
+            "schemaVersion": 1, "publicDraftEditions": [],
+        }))
+        output = self.build()
+        for kind in ("terms", "privacy"):
+            current = (output / f"{kind}/index.html").read_text()
+            retained = (output / f"legal/{previous}/{kind}/index.html").read_text()
+            self.assertIn(f"Version: {edition}", "".join(Page(current).article))
+            self.assertIn(f"Version: {previous}", "".join(Page(retained).article))
+            self.assertIn("Permanent link to this edition", current)
+            self.assertIn("Permanent link to this edition", retained)
+
+    def test_invalid_reader_draft_configuration_preserves_previous_output(self):
+        output = self.build()
+        previous = (output / "terms/index.html").read_bytes()
+        public = self.current["publicEdition"]
+        historical = next(edition for edition, (manifest, _) in self.editions.items()
+                          if manifest["channel"] == "public" and edition != public)
+        valid = {"schemaVersion": 1, "publicDraftEditions": [public]}
+        cases = (
+            ("Invalid legal reader draft configuration", []),
+            ("Invalid legal reader draft configuration", dict(valid, extra=True)),
+            ("Invalid legal reader draft configuration", dict(valid, schemaVersion=True)),
+            ("Invalid legal reader draft configuration", dict(valid, schemaVersion=2)),
+            ("Invalid legal reader draft configuration", dict(valid, publicDraftEditions=public)),
+            ("Invalid public reader draft edition identifier", dict(valid, publicDraftEditions=[None])),
+            ("Invalid public reader draft edition identifier", dict(valid, publicDraftEditions=["../public"])),
+            ("Duplicate public reader draft edition", dict(valid, publicDraftEditions=[public, public])),
+            ("existing public edition", dict(valid, publicDraftEditions=["2026-10-23-public.999"])),
+            ("existing public edition", dict(valid, publicDraftEditions=[self.edition])),
+            ("Only the current public edition", dict(valid, publicDraftEditions=[historical])),
+        )
+        for message, config in cases:
+            with self.subTest(config=config):
+                (self.root / "legal/reader-drafts.json").write_text(json.dumps(config))
+                with self.assertRaisesRegex(ValueError, message):
+                    load_reader_drafts(self.root, self.current, self.editions)
+                with self.assertRaises(subprocess.CalledProcessError):
+                    self.build()
+                self.assertEqual((output / "terms/index.html").read_bytes(), previous)
+
+    def test_reader_draft_configuration_rejects_symlinks_before_replacing_output(self):
+        output = self.build()
+        previous = (output / "terms/index.html").read_bytes()
+        path = self.root / "legal/reader-drafts.json"
+        target = self.root / "reader-drafts.json"
+        path.rename(target)
+        path.symlink_to(target)
+        with self.assertRaisesRegex(ValueError, "must not be a symlink"):
+            load_reader_drafts(self.root, self.current, self.editions)
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.build()
+        self.assertEqual((output / "terms/index.html").read_bytes(), previous)
 
     def test_changed_source_is_rejected_before_replacing_previous_output(self):
         output = self.build()
@@ -194,7 +480,7 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-14-beta.23")
+        self.assertEqual(self.edition, "2026-10-22-beta.24")
         output = self.build()
         current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
@@ -202,12 +488,11 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("2026-10-01-beta.2", old)
         self.assertNotIn("Each puzzle question allows at most three hints", old)
         self.assertIn("each later Hint costs one diamond", current)
-        for route in ("beta", "support"):
-            status = (output / route / "index.html").read_text()
-            self.assertIn("one-time Remove Ads product", status)
-            self.assertIn("Production Remove Ads checkout remains disabled", status)
-            self.assertIn("without real charges", status)
-            self.assertNotIn("Real purchases and publisher ads are disabled.", status)
+        status = (output / "beta/index.html").read_text()
+        self.assertIn("one-time Remove Ads product", status)
+        self.assertIn("Production Remove Ads checkout remains disabled", status)
+        self.assertIn("without real charges", status)
+        self.assertNotIn("Real purchases and publisher ads are disabled.", status)
 
     def test_currency_edition_retains_beta_three_and_discloses_new_records(self):
         previous = self.root / "legal/2026-10-01-beta.3"
@@ -380,16 +665,18 @@ class LegalSiteTests(unittest.TestCase):
         output = self.build()
         actual = {str(path.relative_to(output)) for path in output.rglob("*") if path.is_file()}
         expected = {
-            "manifest.json", "manifest.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
+            "manifest.json", "manifest.schema.json", "legal-info.schema.json", "client-release.json", "client-support.json", "index.html", "404.html",
             "_headers", "styles.css", "brand.svg", "legal/current.json",
             "internal/manifest.json", "internal/manifest-v5.json", "internal/manifest-v6.json", "internal/manifest-v7.json", "internal/client-release.json", "internal/client-support.json",
             "alpha/terms/index.html", "alpha/privacy/index.html",
             "beta/index.html", "beta/terms/index.html", "beta/privacy/index.html",
             "terms/index.html", "privacy/index.html", "support/index.html", "legal/index.html", "versions/index.html",
+            "legal/v1/public.json", "legal/v1/beta.json",
         }
         if (ROOT / "app-ads.txt").is_file():
             expected.add("app-ads.txt")
         for edition, (manifest, _) in self.editions.items():
+            expected.add(f"legal/v1/editions/{edition}.json")
             expected.update(f"legal/{edition}/{name}" for name in (
                 "index.html", "manifest.json", *FILES[manifest["channel"]].values(),
                 "terms/index.html", "privacy/index.html",
@@ -403,7 +690,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-14-beta.23")
+        self.assertEqual(self.edition, "2026-10-22-beta.24")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -420,11 +707,10 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("Banner views do not earn currency", privacy)
         self.assertIn("A sample video does not credit spendable stars", privacy)
         self.assertNotIn("Publisher advertising and real ad-funded rewards are disabled", privacy)
-        for route in ("beta", "support"):
-            status = normalized((output / route / "index.html").read_text())
-            self.assertIn("publisher banners", status)
-            self.assertIn("consent and refusal flow", status)
-            self.assertNotIn("subscriptions and publisher ads remain disabled", status)
+        status = normalized((output / "beta/index.html").read_text())
+        self.assertIn("publisher banners", status)
+        self.assertIn("consent and refusal flow", status)
+        self.assertNotIn("subscriptions and publisher ads remain disabled", status)
         historical = normalized((output / "legal/2026-10-03-beta.10/privacy/index.html").read_text())
         self.assertIn("Publisher advertising and real ad-funded rewards are disabled", historical)
 
@@ -437,6 +723,43 @@ class LegalSiteTests(unittest.TestCase):
         self.assertNotIn("script", page.tags)
         self.assertNotIn("img", page.tags)
         self.assertFalse(any(name.startswith("on") for name in page.attributes))
+
+    def test_wrapped_list_items_preserve_structure_escaping_and_email_links(self):
+        bullets = (
+            '- First <img src=x onerror="bad">\n'
+            '  continued at support@versava.net.\n'
+            '- Second <script>bad</script>\n'
+            '\tcontinued at privacy@versava.net.'
+        )
+        endings = (
+            ("paragraph", "\nFollowing paragraph.", "<p>Following paragraph.</p>"),
+            ("heading", "\n## Following heading", '<h2 id="section-following-heading">'),
+            ("blank", "\n\nFollowing paragraph.", "<p>Following paragraph.</p>"),
+            ("end of file", "", ""),
+        )
+        for label, ending, following in endings:
+            with self.subTest(ending=label):
+                rendered, _ = render_document(bullets + ending)
+                page = Page(f'<article data-policy-document="privacy">{rendered}</article>')
+                self.assertEqual(page.tags.count("ul"), 1)
+                self.assertEqual(page.tags.count("li"), 2)
+                self.assertIn(
+                    '<li>First &lt;img src=x onerror=&quot;bad&quot;&gt; continued at '
+                    '<!--email_off--><a href="mailto:support@versava.net">support@versava.net</a><!--/email_off-->.</li>',
+                    rendered,
+                )
+                self.assertIn(
+                    '<li>Second &lt;script&gt;bad&lt;/script&gt; continued at '
+                    '<!--email_off--><a href="mailto:privacy@versava.net">privacy@versava.net</a><!--/email_off-->.</li>',
+                    rendered,
+                )
+                self.assertEqual(page.targets, ["mailto:support@versava.net", "mailto:privacy@versava.net"])
+                self.assertFalse(set(page.tags) & {"img", "script"})
+                self.assertFalse(any(name.startswith("on") for name in page.attributes))
+                if following:
+                    self.assertIn(f"</li>\n</ul>\n{following}", rendered)
+                else:
+                    self.assertTrue(rendered.endswith("</li>\n</ul>"))
 
     def test_account_lifecycle_editions_retain_published_history_and_describe_scoped_rights(self):
         for edition, names in {
@@ -451,36 +774,45 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
+        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
             privacy = normalized(" ".join(Page((output / f"{route}privacy/index.html").read_text()).article))
             with self.subTest(channel=channel):
-                self.assertIn("Delete account", terms)
-                self.assertIn("Account → Contact support → Delete account", terms)
-                self.assertIn("14-calendar-day grace period", terms)
-                self.assertIn("exact deletion date", terms)
-                self.assertIn("account remains usable", terms)
-                self.assertIn("Stop deletion", terms)
+                self.assertIn("initiate deletion in the app without email or staff approval", terms)
                 if channel == "beta":
-                    self.assertIn("Manage subscriptions separately", terms)
+                    self.assertIn("14-calendar-day grace period", terms)
                 else:
-                    self.assertIn("Manage or cancel the subscription through Apple's controls", terms)
-                self.assertIn("Export my data", privacy)
-                self.assertIn("Delete account under Contact support", privacy)
-                self.assertIn("14-calendar-day grace period", privacy)
+                    self.assertIn("schedule shown in the app", terms)
+                    self.assertIn("During any available grace period", terms)
+                self.assertIn("account remains usable", terms)
+                self.assertIn("request can be cancelled until finalisation begins", terms)
+                self.assertIn("Deletion does not cancel separately billed subscriptions or request a refund", terms)
+                self.assertIn("applicable app store or payment provider", terms)
+                self.assertNotIn("Apple handles refunds", terms)
+                for statement in (
+                    "export supported account and activity records in a machine-readable format",
+                    "Standard exports do not limit valid statutory requests",
+                    "reasonably verify identity and authority",
+                    "lawful redactions to protect others, security or other protected information",
+                    "Requests for account deletion are processed according to the schedule shown in the app",
+                    "During any available grace period",
+                    "request can be cancelled until finalisation begins",
+                    "Final deletion ends account access and removes associated live records",
+                    "does not cancel separately billed subscriptions",
+                    "providers retain independently under their own privacy policies and legal obligations",
+                    "account help",
+                    "for cancellation and purchase recovery arrangements",
+                ):
+                    self.assertIn(statement, privacy)
                 self.assertIn("account remains usable", privacy)
-                self.assertIn("Stop deletion", privacy)
                 self.assertIn("31 days", privacy)
                 self.assertIn("up to 30 days", privacy)
                 self.assertIn("one month", privacy)
-                self.assertIn("human review", privacy)
-                self.assertIn("unclaimed banked", terms)
-                self.assertIn("Restore Purchases", terms)
+                self.assertIn("unclaimed allowances", terms)
+                self.assertIn("Delivery and restoration require transaction and account verification", terms)
                 self.assertIn("next UTC date", terms)
-                self.assertIn("next UTC date", privacy)
-                self.assertIn("without restoring spent consumables or deleted records", privacy)
                 self.assertIn("CHOI, Chong Hing", privacy)
                 self.assertIn("Fasangartenstr 102, 81549 München", privacy)
                 self.assertIn("privacy@versava.net", privacy)
@@ -488,27 +820,104 @@ class LegalSiteTests(unittest.TestCase):
                     '<!--email_off--><a href="mailto:privacy@versava.net">privacy@versava.net</a><!--/email_off-->',
                     (output / f"{route}privacy/index.html").read_text(),
                 )
-                self.assertIn("before-and-after board or path state", privacy)
-                self.assertIn("A displayed Bundle value is an illustrative price comparison", terms)
-                self.assertIn("not the subscription charge", terms)
+                self.assertIn("Price comparisons and stated savings are illustrative", terms)
+                self.assertIn("are not cash values, guaranteed personal savings", terms)
+                for statement in (
+                    "Virtual currency, including but not limited to Stars and Diamonds",
+                    "Purchased virtual currency does not expire through ordinary use",
+                    "Duplicate processing of the same operation does not create additional entitlements or justify additional charges",
+                    "eligible covered dates are banked",
+                    "ordinary cancellation or expiry do not forfeit them",
+                    "claimable online through the associated account after expiry",
+                    "Overlapping coverage does not duplicate allowances",
+                    "future dates cannot be claimed early",
+                    "currency does not expire merely because the subscription ends",
+                    "Consumables, including stated bonuses, are delivered once",
+                    "retries or restoration do not replenish spent items",
+                    "Refunds remain subject to applicable law and provider procedures",
+                    "spending virtual currency does not remove mandatory refund rights",
+                    "unspent units reliably attributable", "do not create debt",
+                    "or use unrelated balances, purchases, completed progress or owned unlocks for recovery",
+                    "Uncertain attribution requires review rather than an automatic debit",
+                ):
+                    self.assertIn(statement, terms)
+                if channel == "beta":
+                    self.assertIn("Confirmed permanent content and day unlocks survive ordinary subscription expiry", terms)
+                else:
+                    self.assertIn("Confirmed permanent content access and other permanent unlocks survive ordinary subscription expiry", terms)
+                for statement in (
+                    "Cloudflare", "Apple", "Google", "legitimate interests",
+                    "Account information", "Gameplay and activity",
+                    "Purchase and advertising information", "related estimates",
+                    "Technical and security information", "Communications and administration",
+                    "Agreement and privacy records",
+                    "We obtain personal data from you, your device, your use of the service and relevant providers",
+                    "Examples within them include, but are not limited to",
+                    "Providers include, but are not limited to",
+                    "Non-personalised ads may still use identifiers or storage",
+                    "measure and optimise advertising performance and verify rewards",
+                    "We apply your advertising privacy choices before requesting ads",
+                    "Refusing optional consent does not prevent free puzzle play",
+                    "We use service activity and technical information to analyse, improve and personalise the service, including gameplay and benefits",
+                    "This can include automated analysis",
+                    "do not supply this activity history for third-party targeted advertising",
+                    "Provider functions include hosting, storage, security, supported sign-in and payments, advertising, communications and request handling",
+                    "applicable transfer requirements and safeguards",
+                    "erasure, restriction, portability, objection and consent withdrawal",
+                    "up to 31 days after final account deletion",
+                    "restricted copies to 30 days from creation",
+                    "requires later erasures to be reapplied before restoration",
+                    "relevant data-protection regulator",
+                    "restricted access and encrypted connections",
+                ):
+                    self.assertIn(statement, privacy)
+                if channel == "beta":
+                    self.assertIn("automatic first-party testing telemetry for all participating accounts", terms)
+                    self.assertIn("without a separate in-app opt-out", terms)
+                    statements = (
+                        "First-party testing telemetry is enabled automatically for all participating Beta accounts",
+                        "has no separate in-app opt-out",
+                        "Processing requiring consent under applicable law or platform rules remains subject to that consent",
+                        "supported account and activity records",
+                        "Terms acceptance and Privacy acknowledgement do not supply that consent",
+                        "Testing telemetry is required for Beta participation",
+                        "Advertising permissions and applicable statutory privacy rights remain separate",
+                        "this TestFlight collection cannot be disabled",
+                        "Feedback and screenshots you submit are voluntary",
+                        "do not share them with third parties",
+                    )
+                else:
+                    statements = (
+                        "This optional processing relies on your consent, separate from advertising consent",
+                        "You can give or withdraw consent in Account → Privacy choices",
+                        "Withdrawing consent stops this optional processing in the app",
+                        "An offline app request remains pending until successfully sent to our service",
+                        "After withdrawal of personalisation consent, existing puzzles and progress may remain as service records",
+                    )
+                for statement in statements:
+                    self.assertIn(statement, privacy)
                 self.assertNotIn("There is currently no automatic account-deletion control", privacy)
+                self.assertNotIn("GitHub", privacy)
+                self.assertNotIn("erase provider-held records", privacy)
+                self.assertIn('<a href="/support/">account help</a>', (output / f"{route}privacy/index.html").read_text())
         historical = normalized((output / "legal/2026-10-03-beta.11/privacy/index.html").read_text())
         self.assertIn("There is currently no automatic account-deletion control", historical)
         public_terms = normalized((output / "terms/index.html").read_text())
-        self.assertIn("Paid daily allowances are banked for eligible covered dates", public_terms)
-        self.assertIn("A combined price requires both currencies", public_terms)
-        self.assertIn("Apple handles refunds", public_terms)
+        self.assertIn("eligible covered dates are banked", public_terms)
+        self.assertIn("combined prices require all specified currencies", public_terms)
+        self.assertIn("Refunds remain subject to applicable law and provider procedures", public_terms)
         support = normalized((output / "support/index.html").read_text())
         self.assertIn("Request my data", support)
         self.assertIn("Account → Contact support → Delete account", support)
-        self.assertIn("exact time 14 calendar days later", support)
+        self.assertIn("deletion is scheduled for 14 calendar days later", support)
         self.assertIn("account remains usable", support)
         self.assertIn("Stop deletion", support)
         self.assertIn("Account deletion does not cancel Apple subscription billing", support)
         self.assertIn("manage the subscription separately", support)
-        self.assertIn("normal response period is one month", support)
+        self.assertNotIn("respond within one month", support)
+        self.assertIn("Signing out or uninstalling does not cancel a scheduled deletion request", support)
         self.assertIn("New Plus diamond eligibility starts on the next UTC date", support)
-        self.assertIn("Fasangartenstr 102, 81549 München", support)
+        self.assertNotIn("Fasangartenstr 102, 81549 München", support)
         self.assertIn("privacy@versava.net", support)
         support_source = (output / "support/index.html").read_text()
         self.assertIn(
@@ -516,6 +925,14 @@ class LegalSiteTests(unittest.TestCase):
             support_source,
         )
         self.assertIn('href="mailto:privacy@versava.net"', support_source)
+        self.assertIn('href="/privacy/">Public Privacy Notice</a>', support_source)
+        self.assertIn("Final deletion ends account access and removes balances, progress, unlocks and unclaimed rewards", support)
+        self.assertIn("Deleted balances, progress, unlocks, consumables and unclaimed allowances are not restored", support)
+        for internal_detail in (
+            "private NAS", "internal privacy mailbox", "Preparation remains",
+            "records requiring human review", "internal notes", "CHOI, Chong Hing",
+        ):
+            self.assertNotIn(internal_detail, support)
 
     def test_concise_current_editions_keep_rights_and_privacy_without_gameplay_spec(self):
         for edition, hashes in {
@@ -583,29 +1000,29 @@ class LegalSiteTests(unittest.TestCase):
         for edition, files in previous.items():
             for name, expected in files.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), expected)
-        self.assertEqual(self.edition, "2026-10-14-beta.23")
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
+        self.assertEqual(self.edition, "2026-10-22-beta.24")
+        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
         output = self.build()
         for route in ("privacy/index.html", "beta/privacy/index.html"):
             notice = normalized(" ".join(Page((output / route).read_text()).article))
             with self.subTest(route=route):
-                for statement in (
-                    "An authenticated request records the email address",
-                    "separate from your Apple sign-in", "not marketing or advertising",
-                    "Recording the address does not verify the mailbox or prove account ownership",
-                    "do not automatically send verification codes or player data emails",
-                    "administrator reviews", "checks the intended recipient and account ownership",
-                    "prepare and download an email draft", "private, request-specific download link",
-                    "email contains no account-data attachment", "does not send an email",
-                    "check the recipient and link, and send manually",
-                    "does not guarantee arrival in your inbox", "at most 30 days from preparation",
-                    "service environment, recorded recipient and exact prepared copy",
-                    "account is finally erased", "recipient or prepared copy changes",
-                    "forwarding it can disclose access to your account copy",
-                    "not automatically removed", "although download access ends",
-                    "cannot recall an email", "until final deletion",
-                    "Minimal received/prepared notifications to privacy@versava.net contain no export",
-                ):
+                statements = (
+                    "Your rights and data requests",
+                    "Standard exports do not limit valid statutory requests",
+                    "reasonably verify identity and authority",
+                    "lawful redactions to protect others, security or other protected information",
+                    "privacy@versava.net or use available Account functions",
+                    "Contact details supplied for a request are used to handle it, not for marketing or advertising",
+                    "We may email a private download link",
+                    "Prepared request copies are accessible for at most 30 days from preparation",
+                    "ending earlier on final account deletion or a change to the recorded recipient or copy",
+                    "excluded from routine backups",
+                    "Service interruptions may delay physical removal after access expires",
+                    "Keep links private",
+                    "expiry or deletion cannot recall emails or copies already saved or shared elsewhere",
+                    "we respond within one month or notify you within that period of a lawful extension",
+                )
+                for statement in statements:
                     self.assertIn(statement, notice)
                 for removed in (
                     "verify it with a short-lived code", "to your verified address",
@@ -615,12 +1032,40 @@ class LegalSiteTests(unittest.TestCase):
         for route in ("terms/index.html", "beta/terms/index.html"):
             terms = normalized(" ".join(Page((output / route).read_text()).article))
             with self.subTest(route=route):
-                self.assertIn("response and private download link, and send manually from their mail client", terms)
-                self.assertIn("Preparing an email draft does not send it", terms)
+                self.assertIn("Account-data requests may be made through available account functions", terms)
+                self.assertIn("reasonable verification of the request and its recipient", terms)
+                self.assertIn("Privacy Notice explains data handling, retention and request arrangements", terms)
 
-    def test_beta_23_matches_the_frozen_notice_and_keeps_public_8_and_beta_22(self):
-        self.assertEqual(self.current["betaEdition"], "2026-10-14-beta.23")
-        self.assertEqual(self.current["publicEdition"], "2026-10-10-public.8")
+    def test_current_privacy_retention_distinguishes_active_and_inactive_records(self):
+        output = self.build()
+        for route in ("privacy/index.html", "beta/privacy/index.html"):
+            notice = normalized(" ".join(Page((output / route).read_text()).article))
+            with self.subTest(route=route):
+                for statement in (
+                    "App activity histories use a rolling 30-day period",
+                    "past interactions and outcomes, use a rolling 90-day period",
+                    "Expired records on inactive devices are removed when the app next accesses them",
+                    "activity summaries for up to 30 days after receipt",
+                    "personalisation examples for up to 90 days from the interaction",
+                    "received evaluation records for up to 90 days after receipt",
+                    "On your device", "On our service",
+                    "We retain shared analysis results only while needed for service operation or evaluation",
+                    "Requests concerning personal data in shared analysis results or other retained records are handled under section",
+                    "The retention period depends on completion of that purpose, applicable legal requirements and unresolved claims",
+                ):
+                    self.assertIn(statement, notice)
+                deletion_heading = "7. Deletion and retention" if route.startswith("beta/") else "6. Deletion and retention"
+                deletion_text = notice.split(deletion_heading, 1)[1]
+                self.assertNotIn("existing puzzles and progress", deletion_text.lower())
+                self.assertNotIn("Withdrawal, where available", notice)
+                self.assertNotIn("not automatically erased", notice)
+                self.assertNotIn("They are reviewed when", notice)
+                self.assertNotIn("Derived insights are retained as needed", notice)
+                request_section = 6 if route.startswith("beta/") else 5
+                self.assertIn(f"shared analysis results or other retained records are handled under section {request_section}", notice)
+                self.assertNotRegex(notice.lower(), r"(?:anonymous|anonymised) (?:shared |analysis )?(?:results|insights)")
+
+    def test_retained_beta_23_and_beta_22_keep_their_published_source_bytes(self):
         expected = {
             "2026-10-14-beta.23": {
                 "terms-beta.md": "51293d48a8caea613e66a1f02507a496044e1aa1a9cec57b1f84f57d465db5a7",
@@ -638,12 +1083,6 @@ class LegalSiteTests(unittest.TestCase):
                     raw = (self.root / "legal" / edition / name).read_bytes()
                     self.assertEqual(hashlib.sha256(raw).hexdigest(), expected_hash)
                     self.assertEqual((output / "legal" / edition / name).read_bytes(), raw)
-        for kind in ("terms", "privacy"):
-            alias = (output / f"beta/{kind}/index.html").read_text()
-            retained = (output / f"legal/2026-10-14-beta.23/{kind}/index.html").read_text()
-            self.assertEqual(normalized("".join(Page(alias).article)),
-                             normalized("".join(Page(retained).article)))
-        self.assertFalse((output / "legal/2026-10-14-public.9").exists())
 
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
@@ -709,8 +1148,11 @@ class LegalSiteTests(unittest.TestCase):
         for name, expected in policy_bytes.items():
             self.assertEqual((self.root / name).read_bytes(), expected)
             self.assertEqual((output / name).read_bytes(), expected)
-        for route in ("index.html", "beta/index.html", "support/index.html"):
-            self.assertIn("/versions/", Page((output / route).read_text()).targets)
+        self.assertIn("/versions/", Page((output / "beta/index.html").read_text()).targets)
+        for route in ("index.html", "404.html", "support/index.html", "terms/index.html", "privacy/index.html"):
+            targets = Page((output / route).read_text()).targets
+            self.assertNotIn("/versions/", targets)
+            self.assertNotIn("/legal/", targets)
 
     def test_current_versions_follows_policy_changes_without_hardcoded_build_numbers(self):
         policy = load_client_support(self.root / "client-support.json")
