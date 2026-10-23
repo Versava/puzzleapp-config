@@ -1065,6 +1065,25 @@ class LegalSiteTests(unittest.TestCase):
                 self.assertIn(f"shared analysis results or other retained records are handled under section {request_section}", notice)
                 self.assertNotRegex(notice.lower(), r"(?:anonymous|anonymised) (?:shared |analysis )?(?:results|insights)")
 
+    def test_retained_beta_23_and_beta_22_keep_their_published_source_bytes(self):
+        expected = {
+            "2026-10-14-beta.23": {
+                "terms-beta.md": "51293d48a8caea613e66a1f02507a496044e1aa1a9cec57b1f84f57d465db5a7",
+                "privacy-beta.md": "75cffa3fbf955d4c950d7dcbd9b8895ba45e67d228b0ba3a980946bdbe3fc618",
+            },
+            "2026-10-10-beta.22": {
+                "terms-beta.md": "311ad4df9b19960564d9a3508ad6ec3c577c98f1c6e43d12a04f249a8ab03394",
+                "privacy-beta.md": "edff7b3443fa209c577347d5feca6517c970217bbc48d5c53c88406cfab9b0c4",
+            },
+        }
+        output = self.build()
+        for edition, files in expected.items():
+            for name, expected_hash in files.items():
+                with self.subTest(edition=edition, name=name):
+                    raw = (self.root / "legal" / edition / name).read_bytes()
+                    self.assertEqual(hashlib.sha256(raw).hexdigest(), expected_hash)
+                    self.assertEqual((output / "legal" / edition / name).read_bytes(), raw)
+
     def test_all_internal_routes_assets_and_section_links_resolve_without_scripts(self):
         output = self.build()
         update_urls = {load_client_release(self.root / source)["ios"]["updateUrl"] for source in ("client-release.json", "internal/client-release.json")}
