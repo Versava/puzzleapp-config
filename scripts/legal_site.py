@@ -14,6 +14,8 @@ EDITION = re.compile(r"[a-z0-9][a-z0-9.-]{0,63}")
 CHANNELS = ("alpha", "beta", "public")
 FILES = {channel: {kind: f"{kind}-{channel}.md" for kind in ("terms", "privacy")} for channel in CHANNELS}
 HOST = "https://puzzle.versava.net"
+MAX_LEGAL_SOURCE_BYTES = 256 * 1024
+MAX_LEGAL_INFO_BYTES = 1024 * 1024
 
 
 def _object(pairs):
@@ -61,6 +63,8 @@ def load_editions(root):
             if source.is_symlink():
                 raise ValueError("Legal sources must not be symlinks")
             data = source.read_bytes()
+            if not data or len(data) > MAX_LEGAL_SOURCE_BYTES:
+                raise ValueError(f"Invalid legal source size: {folder.name}/{filename}")
             if hashlib.sha256(data).hexdigest() != entry["sha256"]:
                 raise ValueError(f"Frozen legal source changed: {folder.name}/{filename}")
             text = data.decode("utf-8")
@@ -75,38 +79,124 @@ def load_editions(root):
     return current, editions
 
 
+def render_legal_info(current, editions):
+    """Create deterministic JSON bundles from verified, retained source bytes.
+
+    The current aliases support discovery. An installed app reads its exact
+    edition so changing an alias cannot replace an accepted agreement.
+    """
+    generated = {}
+    for edition, (manifest, texts) in editions.items():
+        channel = manifest["channel"]
+        documents = {}
+        for kind, filename in FILES[channel].items():
+            text = texts[kind]
+            data = text.encode("utf-8")
+            title = text.splitlines()[0] if text else ""
+            if not title.startswith("# ") or not title[2:].strip() or len(title[2:]) > 256:
+                raise ValueError(f"Legal source must start with a document title: {edition}/{filename}")
+            if not data or len(data) > MAX_LEGAL_SOURCE_BYTES:
+                raise ValueError(f"Invalid legal source size: {edition}/{filename}")
+            checksum = hashlib.sha256(data).hexdigest()
+            if checksum != manifest["documents"][kind]["sha256"]:
+                raise ValueError(f"Legal JSON source checksum mismatch: {edition}/{filename}")
+            documents[kind] = {
+                "title": title[2:],
+                "format": "markdown",
+                "text": text,
+                "sourceUrl": f"{HOST}/legal/{edition}/{filename}",
+                "readerUrl": f"{HOST}/legal/{edition}/{kind}/",
+                "sha256": checksum,
+            }
+        payload = {
+            "schemaVersion": 1,
+            "channel": channel,
+            "edition": edition,
+            "documents": documents,
+        }
+        serialized = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if len(serialized) > MAX_LEGAL_INFO_BYTES:
+            raise ValueError(f"Legal JSON bundle exceeds its size limit: {edition}")
+        generated[f"legal/v1/editions/{edition}.json"] = serialized
+    for channel in ("public", "beta"):
+        edition = current[f"{channel}Edition"]
+        generated[f"legal/v1/{channel}.json"] = generated[f"legal/v1/editions/{edition}.json"]
+    return generated
+
+
+def load_reader_drafts(root, current, editions):
+    """Read build-only display controls; agreement sources and APIs stay exact."""
+    path = root / "legal" / "reader-drafts.json"
+    if path.is_symlink():
+        raise ValueError("Legal reader draft configuration must not be a symlink")
+    config = read_json(path)
+    if (not isinstance(config, dict)
+            or set(config) != {"schemaVersion", "publicDraftEditions"}
+            or type(config["schemaVersion"]) is not int
+            or config["schemaVersion"] != 1
+            or not isinstance(config["publicDraftEditions"], list)):
+        raise ValueError("Invalid legal reader draft configuration")
+    drafts = config["publicDraftEditions"]
+    if any(not isinstance(edition, str) or not EDITION.fullmatch(edition) for edition in drafts):
+        raise ValueError("Invalid public reader draft edition identifier")
+    if len(drafts) != len(set(drafts)):
+        raise ValueError("Duplicate public reader draft edition")
+    for edition in drafts:
+        if edition not in editions or editions[edition][0]["channel"] != "public":
+            raise ValueError("Public reader draft must identify an existing public edition")
+        if edition != current["publicEdition"]:
+            raise ValueError("Only the current public edition may be a reader draft")
+    return frozenset(drafts)
+
+
 def render_document(text):
-    """Preserve the document's words; escape all source markup as plain text."""
-    output, sections, paragraph = [], [], []
+    """Render one trusted help link; escape all other source markup as text."""
+    output, sections, paragraph, list_item = [], [], [], []
     seen = set()
     in_list = False
 
     def inline(value):
-        escaped = html.escape(value)
-        for address in ("support@versava.net", "privacy@versava.net"):
-            escaped = escaped.replace(address, f'<!--email_off--><a href="mailto:{address}">{address}</a><!--/email_off-->')
-        return escaped
+        support_url = f"{HOST}/support/"
+        help_link = f"[account help]({support_url})"
+
+        def plain(part):
+            escaped = html.escape(part)
+            for address in ("support@versava.net", "privacy@versava.net"):
+                escaped = escaped.replace(address, f'<!--email_off--><a href="mailto:{address}">{address}</a><!--/email_off-->')
+            return escaped.replace(support_url, f'<a href="/support/">{support_url}</a>')
+
+        return '<a href="/support/">account help</a>'.join(
+            plain(part) for part in value.split(help_link)
+        )
 
     def flush():
         if paragraph:
             value = " ".join(paragraph)
-            css = ' class="version"' if value.startswith("Version:") else ""
+            css = ' class="version"' if value.startswith(("Version:", "Updated:")) else ""
             output.append(f"<p{css}>{inline(value)}</p>")
             paragraph.clear()
+
+    def flush_list_item():
+        if list_item:
+            output.append(f"<li>{inline(' '.join(list_item))}</li>")
+            list_item.clear()
+
+    def close_list():
+        nonlocal in_list
+        flush_list_item()
+        if in_list:
+            output.append("</ul>")
+            in_list = False
 
     for line in text.splitlines():
         if not line.strip():
             flush()
-            if in_list:
-                output.append("</ul>")
-                in_list = False
+            close_list()
             continue
         heading = re.fullmatch(r"(#{1,3}) (.+)", line)
         if heading:
             flush()
-            if in_list:
-                output.append("</ul>")
-                in_list = False
+            close_list()
             level, title = len(heading[1]), heading[2]
             anchor = "section-" + re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
             while anchor in seen:
@@ -117,18 +207,18 @@ def render_document(text):
                 sections.append((anchor, title))
         elif line.startswith("- "):
             flush()
+            flush_list_item()
             if not in_list:
                 output.append("<ul>")
                 in_list = True
-            output.append(f"<li>{inline(line[2:])}</li>")
+            list_item.append(line[2:].strip())
+        elif in_list and line.startswith(("  ", "\t")):
+            list_item.append(line.strip())
         else:
-            if in_list:
-                output.append("</ul>")
-                in_list = False
+            close_list()
             paragraph.append(line.strip())
     flush()
-    if in_list:
-        output.append("</ul>")
+    close_list()
     return "\n".join(output), sections
 
 
@@ -137,6 +227,7 @@ def _navigation(sections):
 
 
 def render_pages(root, current, editions):
+    reader_drafts = load_reader_drafts(root, current, editions)
     home = (root / "index.html").read_text(encoding="utf-8")
     header = re.search(r'<header class="site-header">.*?</header>', home, re.S)
     footer = re.search(r'<footer class="site-footer">.*?</footer>', home, re.S)
@@ -167,17 +258,21 @@ def render_pages(root, current, editions):
         context = ("Historical Alpha testing documents." if historical else
                    "For invited Beta testing." if testing else "Public app and website documents.")
         for kind, text in texts.items():
+            public_draft = channel == "public" and edition in reader_drafts
+            if public_draft:
+                text = re.sub(r"^Version: [^\n]+ · Updated: (.+)$", r"Updated: \1", text, flags=re.M)
             article, sections = render_document(text)
             title = text.splitlines()[0].removeprefix("# ")
             permanent = f"/legal/{edition}/{kind}/"
+            edition_link = "" if public_draft else f' <a href="{permanent}">Permanent link to this edition</a>.'
             nav = _navigation(sections)
             body = f'''<main id="main" class="document-page page-width">
 <p class="breadcrumb"><a href="/">Daily Pause</a> / {label} documents</p>
 <details class="mobile-contents"><summary>On this page</summary>{nav}</details>
 <div class="document-layout"><aside class="contents"><p class="contents-label">On this page</p>{nav}</aside>
-<div><p class="document-status">{context} <a href="{permanent}">Permanent link to this edition</a>.</p>
-<article class="document" data-policy-document="{kind}" data-policy-channel="{channel}" aria-label="{html.escape(title)}">{article}</article>
-<div class="document-end"><a href="/support/">Contact support</a><a href="/legal/{edition}/{FILES[channel][kind]}">Save the original text</a><a href="/legal/">Document editions</a><a href="#main">Back to top</a></div>
+<div><p class="document-status">{context}{edition_link}</p>
+<article class="document" data-policy-document="{kind}" data-policy-channel="{channel}" data-policy-edition="{edition}" aria-label="{html.escape(title)}">{article}</article>
+<div class="document-end"><a href="/support/">Contact support</a><a href="/legal/{edition}/{FILES[channel][kind]}">Save the original text</a><a href="#main">Back to top</a></div>
 </div></div></main>'''
             add(permanent, page(title, body, permanent, testing=testing))
             if edition == current[f"{channel}Edition"]:
@@ -187,10 +282,9 @@ def render_pages(root, current, editions):
 <p class="support-intro">The retained Terms and Privacy Notice for this edition.</p><ul class="edition-list">
 <li><a href="/legal/{edition}/terms/">{html.escape(texts["terms"].splitlines()[0].removeprefix("# "))}</a></li>
 <li><a href="/legal/{edition}/privacy/">{html.escape(texts["privacy"].splitlines()[0].removeprefix("# "))}</a></li>
-<li><a href="/legal/{edition}/manifest.json">Source checksums</a></li></ul><p><a href="/legal/">All editions</a></p></main>'''
+<li><a href="/legal/{edition}/manifest.json">Source checksums</a></li></ul><p><a href="/legal/">Current public documents</a></p></main>'''
         add(f"/legal/{edition}/", page(f"{label} document edition", edition_body, f"/legal/{edition}/", testing=testing))
-    history = "".join(f'<li><a href="/legal/{edition}/">{html.escape(edition)}</a> · {editions[edition][0]["channel"].title()}</li>' for edition in reversed(editions))
-    add("/legal/", page("Document editions", f'<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Document editions</h1><p class="support-intro">Public and testing editions, retained for reference.</p><ul class="edition-list">{history}</ul></main>', "/legal/", testing=True))
+    add("/legal/", page("Legal documents", '<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause</p><h1>Legal documents</h1><p class="support-intro">The current Terms and Privacy Notice.</p><ul class="edition-list"><li><a href="/terms/">Terms of Use</a></li><li><a href="/privacy/">Privacy Notice</a></li></ul></main>', "/legal/", testing=True))
     beta = '''<main id="main" class="support-page page-width"><p class="eyebrow">Invited testing</p><h1>Daily Pause Beta</h1>
 <p class="support-intro">Daily Pause is currently tested on iPhone through TestFlight. Read the documents for that testing programme.</p>
 <ul class="edition-list"><li><a href="/beta/terms/">Beta Testing Terms</a></li><li><a href="/beta/privacy/">Beta Privacy Notice</a></li><li><a href="/versions/">Current app versions</a></li></ul>
@@ -201,10 +295,19 @@ def render_pages(root, current, editions):
     support = '''<main id="main" class="support-page page-width"><p class="eyebrow">Daily Pause help</p><h1>Here to help.</h1>
 <p class="support-intro">Questions about a puzzle, your account, or your privacy? Contact Versava.</p>
 <section class="contact-card"><h2>Email support</h2><!--email_off--><a class="contact-email" href="mailto:support@versava.net?subject=Daily%20Pause%20support">support@versava.net</a><!--/email_off-->
-<p>For an app issue, include the app version, what happened and whether you were playing as a guest or using an Apple-linked account. <a href="/versions/">Check the current supported versions</a>.</p></section>
+<p>For an app issue, include the app version, what happened and whether you were playing as a guest or using a linked account.</p></section>
 <section class="support-section"><h2>Reporting a problem</h2><p>Tell us what you expected and what happened. Screenshots can help; remove unrelated personal information. Do not include passwords, access tokens or payment-card details.</p></section>
-<section class="support-section"><!--email_off--><h2>Account and privacy requests</h2><p>Supported app versions provide Export my data and Request my data in Account. To delete an account, choose Account → Contact support → Delete account. That path leads directly to an in-app confirmation. When enabled, Request my data queues an available server account copy for authorised staff on our private NAS, with minimal received and prepared notifications to our internal privacy mailbox. Preparation remains separate from human review and the reply to you. The automatic account copy identifies any records requiring human review; internal notes are not excluded from applicable access rights merely because they are internal. Contact support@versava.net for other access, correction, erasure or portability requests, or if those controls are unavailable in your installed build. Our appointed EU representative is CHOI, Chong Hing, Fasangartenstr 102, 81549 München; <a href="mailto:privacy@versava.net">privacy@versava.net</a>. You may contact the representative about personal information processing and applicable GDPR rights. We may reasonably verify ownership; do not email usable account credentials.</p><p>After confirmation, deletion is scheduled for the exact time 14 calendar days later. The account remains usable during this grace period, and Account shows the scheduled date and a direct Stop deletion action while cancellation is still possible. Stopping deletion keeps the account. When deletion becomes final it removes the account's balances, unlocks and unclaimed rewards. Account deletion does not cancel Apple subscription billing; manage the subscription separately. When available in the supported build, Restore Purchases can recover verified Remove Ads and active Plus on a new account without recovering the old wallet or unclaimed allowances. New Plus diamond eligibility starts on the next UTC date. Signing out, removing the app or leaving TestFlight does not itself delete server-held records. Where GDPR applies, the normal response period is one month, with timely explanation of any lawful extension.</p><p><a href="/privacy/">Public Privacy Notice</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p><!--/email_off--></section>
-<section class="support-section"><h2>Invited Beta testing</h2><p>Daily Pause is currently tested on iPhone through TestFlight. Production paid purchases and subscriptions remain disabled. Designated TestFlight builds may display publisher banners and offer optional rewarded videos when separate advertising controls and privacy choices permit it. Publisher ad requests are non-personalised and use Google’s applicable consent and refusal flow; Ad privacy options is available where required. Verified ad-funded grants need an account-bound ticket and Google’s signed completion callback. Designated TestFlight builds may test monthly Daily Pause Plus subscriptions, supported star and diamond consumables, and the one-time Remove Ads product in Apple's Sandbox without real charges when testing controls permit it. Individual cash-pack checkout is disabled, including its purchase tests. Production Remove Ads checkout remains disabled. Other designated Beta builds can show labelled Google sample ads; sample videos do not grant stars, Past-day access or paid hints.</p><p><a href="/beta/terms/">Beta Testing Terms</a> · <a href="/beta/privacy/">Beta Privacy Notice</a></p></section>
+<section class="support-section"><!--email_off--><h2>Account and privacy requests</h2>
+<p>Supported app versions provide <strong>Export my data</strong> and <strong>Request my data</strong> in <strong>Account</strong>. For other access, correction, erasure or portability requests, or if those controls are unavailable, contact <a href="mailto:privacy@versava.net">privacy@versava.net</a>.</p>
+<p>We may reasonably verify ownership. Do not email passwords, access tokens or other usable account credentials.</p>
+<p>See our <a href="/privacy/">Public Privacy Notice</a> for personal-data handling, privacy rights, request arrangements and EU representative details.</p><!--/email_off--></section>
+<section class="support-section"><h2>Deleting your account</h2>
+<p>Choose <strong>Account → Contact support → Delete account</strong> to open the in-app confirmation.</p>
+<p>After confirmation, deletion is scheduled for 14 calendar days later. Your account remains usable during this grace period. Account shows the scheduled date and a <strong>Stop deletion</strong> action while cancellation remains possible. Stopping deletion keeps your account.</p>
+<p>Final deletion ends account access and removes balances, progress, unlocks and unclaimed rewards. Signing out or uninstalling does not cancel a scheduled deletion request or itself delete server-held records.</p></section>
+<section class="support-section"><h2>Subscriptions and purchase recovery</h2>
+<p>Account deletion does not cancel Apple subscription billing; manage the subscription separately.</p>
+<p>Where supported, <strong>Restore Purchases</strong> can recover verified <strong>Remove Ads</strong> and an active <strong>Plus</strong> subscription on a new account. Deleted balances, progress, unlocks, consumables and unclaimed allowances are not restored. New Plus diamond eligibility starts on the next UTC date.</p></section>
 <section class="support-section"><h2>Operator</h2><address>Versava Limited<br>Unit 1319, 13/F, One Midtown<br>11 Hoi Shing Road, Tsuen Wan<br>Hong Kong</address></section></main>'''
     add("/support/", page("Support", support, "/support/", active="/support/"))
     policies = [("App policy", "/client-support.json", load_client_support(root / "client-support.json")),
@@ -249,9 +352,11 @@ def render_pages(root, current, editions):
     return pages
 
 
-def build_legal_site(root, output):
+def build_legal_site(root, output, *, legal_info=None):
     current, editions = load_editions(root)
     generated = render_pages(root, current, editions)
+    if legal_info is None:
+        legal_info = render_legal_info(current, editions)
     for relative, content in generated.items():
         destination = output / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -263,4 +368,8 @@ def build_legal_site(root, output):
         destination = output / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes((root / relative).read_bytes())
-    return sorted([*generated, *sources])
+    for relative, content in legal_info.items():
+        destination = output / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(content)
+    return sorted([*generated, *sources, *legal_info])
