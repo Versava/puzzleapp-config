@@ -298,11 +298,11 @@ def render_pages(root, current, editions):
 <p>For an app issue, include the app version, what happened and whether you were playing as a guest or using a linked account.</p></section>
 <section class="support-section"><h2>Reporting a problem</h2><p>Tell us what you expected and what happened. Screenshots can help; remove unrelated personal information. Do not include passwords, access tokens or payment-card details.</p></section>
 <section class="support-section"><!--email_off--><h2>Account and privacy requests</h2>
-<p>Supported app versions provide <strong>Export my data</strong> and <strong>Request my data</strong> in <strong>Account</strong>. For other access, correction, erasure or portability requests, or if those controls are unavailable, contact <a href="mailto:privacy@versava.net">privacy@versava.net</a>.</p>
+<p>Supported app versions provide <strong>Request my data</strong> through <strong>Account → Help &amp; about → Contact support</strong>. For other access, correction, erasure or portability requests, or if those controls are unavailable, contact <a href="mailto:privacy@versava.net">privacy@versava.net</a>.</p>
 <p>We may reasonably verify ownership. Do not email passwords, access tokens or other usable account credentials.</p>
 <p>See our <a href="/privacy/">Public Privacy Notice</a> for personal-data handling, privacy rights, request arrangements and EU representative details.</p><!--/email_off--></section>
 <section class="support-section"><h2>Deleting your account</h2>
-<p>Choose <strong>Account → Contact support → Delete account</strong> to open the in-app confirmation.</p>
+<p>Choose <strong>Account → Help &amp; about → Contact support → Delete account</strong> to open the in-app confirmation.</p>
 <p>After confirmation, deletion is scheduled for 14 calendar days later. Your account remains usable during this grace period. Account shows the scheduled date and a <strong>Stop deletion</strong> action while cancellation remains possible. Stopping deletion keeps your account.</p>
 <p>Final deletion ends account access and removes balances, progress, unlocks and unclaimed rewards. Signing out or uninstalling does not cancel a scheduled deletion request or itself delete server-held records.</p></section>
 <section class="support-section"><h2>Subscriptions and purchase recovery</h2>
