@@ -83,7 +83,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "6b886036e74411a9fb9a949e3a6b20773aea61e13ba92c459bd85144e5361a7a",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-22-beta.24")
+        self.assertEqual(self.edition, "2026-10-24-beta.26")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -104,8 +104,8 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "1812ec0885719f93e862f10ae7c88290fa1395b368140bb0470b5e00ebb31af5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-22-beta.24")
-        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
+        self.assertEqual(self.edition, "2026-10-24-beta.26")
+        self.assertEqual(self.current["publicEdition"], "2026-10-24-public.12")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -480,7 +480,7 @@ class LegalSiteTests(unittest.TestCase):
         }
         for name, checksum in expected.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-22-beta.24")
+        self.assertEqual(self.edition, "2026-10-24-beta.26")
         output = self.build()
         current = (output / "legal/2026-10-06-beta.19/terms/index.html").read_text()
         old = (output / "legal/2026-10-01-beta.2/terms/index.html").read_text()
@@ -690,7 +690,7 @@ class LegalSiteTests(unittest.TestCase):
             "privacy-beta.md": "7132bee3b31b694eca1aa593723eded43c06204b54b3563b93531e22edd3c9d5",
         }.items():
             self.assertEqual(hashlib.sha256((previous / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.edition, "2026-10-22-beta.24")
+        self.assertEqual(self.edition, "2026-10-24-beta.26")
         output = self.build()
         terms = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/terms/index.html").read_text()).article))
         privacy = normalized(" ".join(Page((output / "legal/2026-10-06-beta.19/privacy/index.html").read_text()).article))
@@ -774,7 +774,7 @@ class LegalSiteTests(unittest.TestCase):
         }.items():
             for name, checksum in names.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), checksum)
-        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
+        self.assertEqual(self.current["publicEdition"], "2026-10-24-public.12")
         output = self.build()
         for channel, route in (("beta", "beta/"), ("public", "")):
             terms = normalized(" ".join(Page((output / f"{route}terms/index.html").read_text()).article))
@@ -792,7 +792,8 @@ class LegalSiteTests(unittest.TestCase):
                 self.assertIn("applicable app store or payment provider", terms)
                 self.assertNotIn("Apple handles refunds", terms)
                 for statement in (
-                    "export supported account and activity records in a machine-readable format",
+                    "supported account and activity records in a machine-readable format",
+                    "Use Request my data in Account → Help & about → Contact support",
                     "Standard exports do not limit valid statutory requests",
                     "reasonably verify identity and authority",
                     "lawful redactions to protect others, security or other protected information",
@@ -889,7 +890,7 @@ class LegalSiteTests(unittest.TestCase):
                 else:
                     statements = (
                         "This optional processing relies on your consent, separate from advertising consent",
-                        "You can give or withdraw consent in Account → Privacy choices",
+                        "You can give or withdraw consent in Account → Help & about → Privacy",
                         "Withdrawing consent stops this optional processing in the app",
                         "An offline app request remains pending until successfully sent to our service",
                         "After withdrawal of personalisation consent, existing puzzles and progress may remain as service records",
@@ -908,7 +909,7 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn("Refunds remain subject to applicable law and provider procedures", public_terms)
         support = normalized((output / "support/index.html").read_text())
         self.assertIn("Request my data", support)
-        self.assertIn("Account → Contact support → Delete account", support)
+        self.assertIn("Account → Help &amp; about → Contact support → Delete account", support)
         self.assertIn("deletion is scheduled for 14 calendar days later", support)
         self.assertIn("account remains usable", support)
         self.assertIn("Stop deletion", support)
@@ -1000,8 +1001,8 @@ class LegalSiteTests(unittest.TestCase):
         for edition, files in previous.items():
             for name, expected in files.items():
                 self.assertEqual(hashlib.sha256((self.root / "legal" / edition / name).read_bytes()).hexdigest(), expected)
-        self.assertEqual(self.edition, "2026-10-22-beta.24")
-        self.assertEqual(self.current["publicEdition"], "2026-10-22-public.10")
+        self.assertEqual(self.edition, "2026-10-24-beta.26")
+        self.assertEqual(self.current["publicEdition"], "2026-10-24-public.12")
         output = self.build()
         for route in ("privacy/index.html", "beta/privacy/index.html"):
             notice = normalized(" ".join(Page((output / route).read_text()).article))

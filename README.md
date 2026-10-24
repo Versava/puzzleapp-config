@@ -1,3 +1,18 @@
+# Prepared navigation-only legal update — 24 October 2026
+
+New immutable source folders prepare Beta.26 and Public.12 from the issued
+Beta.24/Public.10 notices. Privacy instructions now follow Account → Help & about:
+Privacy for the optional Public choice, and Contact support → Request my data
+for account-data requests. Terms differ only in their edition/date header.
+Public personalisation remains optional and off by default; the unrelated
+unissued Beta.25/Public.11 policy proposals are not activated.
+
+Support uses the same current request/deletion navigation and no longer
+advertises a direct Export my data control. Local discovery pointers now select
+Beta.26/Public.12, with issued reader labels enabled. Matching native pins,
+assets and per-document identities are prepared. Existing issued source bytes
+remain frozen; publication and canonical HTTPS verification are still pending.
+
 # Approved legal publication — 23 October 2026
 
 This publication contains approved Beta.24 and Public.10. Current public product and
