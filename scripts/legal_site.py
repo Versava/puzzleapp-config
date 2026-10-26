@@ -313,8 +313,14 @@ def render_pages(root, current, editions):
     policies = [("App policy", "/client-support.json", load_client_support(root / "client-support.json")),
                 ("Internal app policy", "/internal/client-support.json", load_client_support(root / "internal/client-support.json"))]
     shared = policies[0][2] == policies[1][2]
+    visible_policies = policies[:1] if shared else policies
+    if not shared and all(urlsplit(policy["ios"]["updateUrl"]).netloc == "testflight.apple.com"
+                          for _, _, policy in policies):
+        # The Public source can retain a prelaunch testing placeholder. The
+        # internal policy owns the currently obtainable Beta in that case.
+        visible_policies = policies[1:]
     cards = {"beta": [], "release": []}
-    for label, source, policy in policies[:1] if shared else policies:
+    for label, source, policy in visible_policies:
         ios = policy["ios"]
         testing = urlsplit(ios["updateUrl"]).netloc == "testflight.apple.com"
         label = "Current app policy" if shared else label
