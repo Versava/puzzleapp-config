@@ -90,6 +90,8 @@ h1 { font-size:clamp(2.5rem,5.5vw,4.5rem); line-height:1.08; letter-spacing:-.06
 #release-details .version-facts div { display:flex; flex-direction:column; gap:.45rem; }
 #release-details .version-facts dt { font-size:.73rem; line-height:1.4; }
 #release-details .version-facts dd { font-size:1.55rem; font-weight:700; line-height:1.15; font-variant-numeric:tabular-nums; }
+#release-details .version-facts dd { display:flex; align-items:baseline; flex-wrap:wrap; gap:.45rem .65rem; }
+#release-details .release-date { color:var(--quiet); font-size:.68rem; font-weight:400; white-space:nowrap; }
 @media (max-width:480px) {
   #release-details .support-section { grid-template-columns:.75fr 2.3fr; gap:1rem; padding:1.4rem 1.15rem; }
   #release-details .version-facts { gap:.8rem; }

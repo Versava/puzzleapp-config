@@ -81,7 +81,7 @@ class ReleasePolicyV3Tests(unittest.TestCase):
                 value["ios"] = None
             (root / f"releases/{track}.json").write_text(json.dumps(value))
         (root / "releases/index.json").write_text(json.dumps({"schemaVersion": 1, "revision": 1,
-            "beta": {"version": "2.3.0", "minimumVersion": "2.1.0", "status": "testing"}, "public": {"version": "2.0.0", "minimumVersion": "2.0.0", "status": "inReview"}}))
+            "beta": {"version": "2.3.0", "minimumVersion": "2.1.0", "status": "testing", "releasedAt": "2026-10-20"}, "public": {"version": "2.0.0", "minimumVersion": "2.0.0", "status": "inReview", "releasedAt": None}}))
         return root
 
     def test_review_metadata_does_not_add_status_or_unavailable_app_links(self):
@@ -91,6 +91,7 @@ class ReleasePolicyV3Tests(unittest.TestCase):
         self.assertIn("2.0.0", source)
         self.assertNotIn("In review", source)
         self.assertNotIn("Status", source)
+        self.assertIn('datetime="2026-10-20"', source)
         self.assertIn("Latest version", source)
         self.assertIn("Minimum supported version", source)
         self.assertLess(source.index('id="release-versions"'), source.index('id="beta-versions"'))
@@ -102,6 +103,16 @@ class ReleasePolicyV3Tests(unittest.TestCase):
         (root / "releases/index.json").write_text(json.dumps(index))
         with self.assertRaises(ValueError):
             load_index(root)
+
+    def test_release_dates_must_be_real_calendar_dates_and_not_submission_dates(self):
+        root = self.fixture_root()
+        index, _ = load_index(root)
+        for track, invalid in (("beta", "2026-02-30"), ("beta", None), ("public", "2026-10-20")):
+            value = copy.deepcopy(index)
+            value[track]["releasedAt"] = invalid
+            (root / "releases/index.json").write_text(json.dumps(value))
+            with self.subTest(track=track, invalid=invalid), self.assertRaises(ValueError):
+                load_index(root)
 
     def test_obtainable_status_requires_matching_policy_and_future_versions_need_no_test_edits(self):
         root = self.fixture_root()

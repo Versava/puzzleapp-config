@@ -1,6 +1,7 @@
 """Additive, track-specific policies; legacy schema 1/2 files stay unchanged."""
 
 import json
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -100,9 +101,14 @@ def load_index(root):
     for track, allowed in (("beta", {"testing", "unavailable"}),
                            ("public", {"inReview", "available", "unavailable"})):
         item = index[track]
-        exact(item, ("version", "minimumVersion", "status"))
+        exact(item, ("version", "minimumVersion", "status", "releasedAt"))
         if item["status"] not in allowed:
             raise ValueError("Invalid release availability status")
+        if item["status"] in {"testing", "available"}:
+            if not isinstance(item["releasedAt"], str) or date.fromisoformat(item["releasedAt"]).isoformat() != item["releasedAt"]:
+                raise ValueError("An obtainable release requires its real release date")
+        elif item["releasedAt"] is not None:
+            raise ValueError("An unreleased version cannot have a release date")
         if item["version"] is not None:
             version(item["version"])
             if version(item["minimumVersion"]) > version(item["version"]):

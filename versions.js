@@ -104,9 +104,13 @@
     number(index.revision); policy(beta, 'beta'); policy(publicPolicy, 'public');
     for (const [track, selected] of [['beta', beta], ['public', publicPolicy]]) {
       const item = index[track];
-      exact(item, ['version', 'minimumVersion', 'status']);
+      exact(item, ['version', 'minimumVersion', 'status', 'releasedAt']);
       const statuses = track === 'public' ? ['inReview', 'available', 'unavailable'] : ['testing', 'unavailable'];
       if (!statuses.includes(item.status)) throw new Error('Invalid release status');
+      if (['testing', 'available'].includes(item.status)) {
+        if (typeof item.releasedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.releasedAt) ||
+            !Number.isFinite(Date.parse(`${item.releasedAt}T00:00:00Z`)) || new Date(`${item.releasedAt}T00:00:00Z`).toISOString().slice(0, 10) !== item.releasedAt) throw new Error('Invalid release date');
+      } else if (item.releasedAt !== null) throw new Error('An unreleased version has no release date');
       if (item.status === 'unavailable') {
         if (item.version !== null || item.minimumVersion !== null) throw new Error('Unavailable release advertises versions');
       } else if (compare(item.minimumVersion, item.version) > 0) throw new Error('Invalid release index boundary');
@@ -147,8 +151,14 @@
     if (className) result.className = className;
     return result;
   }
-  function fact(list, name, value) {
-    const row = node('div'); row.append(node('dt', name), node('dd', value)); list.append(row);
+  function fact(list, name, value, releasedAt = null) {
+    const row = node('div'), data = node('dd', value);
+    if (releasedAt) {
+      const [year, month, day] = releasedAt.split('-');
+      const formatted = `${Number(day)} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(month) - 1]} ${year}`;
+      const released = node('time', formatted, 'release-date'); released.setAttribute('datetime', releasedAt); data.append(released);
+    }
+    row.append(node('dt', name), data); list.append(row);
   }
   async function read(path, signal) {
     const response = await fetch(path, {cache: 'no-store', redirect: 'error', signal});
@@ -167,7 +177,7 @@
     result.setAttribute('aria-labelledby', heading.id); result.append(heading);
     const card = node('section', undefined, 'contact-card version-card');
     const facts = node('dl', undefined, 'version-facts');
-    fact(facts, 'Latest version', (channel ? channel.latestVersion : item.version) || 'Not listed');
+    fact(facts, 'Latest version', (channel ? channel.latestVersion : item.version) || 'Not listed', item.releasedAt);
     fact(facts, 'Minimum supported version', (channel ? channel.minimumVersion : item.minimumVersion) || 'Not listed');
     card.append(facts);
     if (channel && channel.blockedRanges.length) {

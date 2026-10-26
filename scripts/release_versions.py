@@ -2,6 +2,7 @@
 
 import html
 import json
+from datetime import date
 
 from validate_release_policy import load_index
 
@@ -17,7 +18,12 @@ def render(root):
         item, channel = index[track], policies[track]["ios"]
         latest = html.escape(channel["latestVersion"] if channel else item["version"] or "Not listed")
         minimum = html.escape(channel["minimumVersion"] if channel else item["minimumVersion"] or "Not listed")
-        facts = f'<div><dt>Latest version</dt><dd>{latest}</dd></div><div><dt>Minimum supported version</dt><dd>{minimum}</dd></div>'
+        released = ""
+        if item["releasedAt"]:
+            day = date.fromisoformat(item["releasedAt"])
+            formatted = f'{day.day} {("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")[day.month-1]} {day.year}'
+            released = f'<time class="release-date" datetime="{item["releasedAt"]}">{formatted}</time>'
+        facts = f'<div><dt>Latest version</dt><dd>{latest}{released}</dd></div><div><dt>Minimum supported version</dt><dd>{minimum}</dd></div>'
         blocked = ""
         if channel and channel["blockedRanges"]:
             blocked = '<h4>Blocked versions</h4><ul>' + ''.join(

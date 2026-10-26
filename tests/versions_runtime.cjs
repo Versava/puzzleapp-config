@@ -52,6 +52,8 @@ async function refresh(state, documents, raw = {}) {
 }
 
 for (const [name, mutate] of [
+  ['impossible release date', documents => { documents[indexPath].beta.releasedAt = '2026-02-30'; }],
+  ['release date supplied for an unreleased version', documents => { documents[indexPath].public.releasedAt = '2026-10-20'; }],
   ['minimum greater than latest', documents => {
     documents[betaPath].ios.minimumVersion = '9.0.0'; documents[indexPath].beta.minimumVersion = '9.0.0';
   }],
@@ -104,6 +106,19 @@ for (const [name, mutate] of [
     assert.equal(text(state.target), 'GENERATED FALLBACK');
   });
 }
+
+test('a real Public release date appears beside its version without status copy', async () => {
+  const documents = advanced();
+  const item = documents[indexPath].public;
+  item.status = 'available'; item.releasedAt = '2026-10-20';
+  documents[publicPath].ios = {latestVersion: item.version, minimumVersion: item.minimumVersion,
+    updateUrl: 'https://apps.apple.com/app/id123456789', blockedRanges: [], updatePolicy: 'optional'};
+  const state = await runtime(documents);
+  assert.equal(state.target.replacements, 1);
+  assert.match(text(state.target), /20 Oct 2026/);
+  assert.ok(!text(state.target).includes('Available'));
+  assert.ok(!text(state.target).includes('Status'));
+});
 
 test('first fetch rejects changed content under an already generated revision', async () => {
   const documents = clone(baseline);
