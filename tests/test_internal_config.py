@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -11,27 +12,32 @@ from validate_client_support import load as load_support
 
 
 class InternalConfigurationTests(unittest.TestCase):
-    def test_external_client_update_preserves_generator_channels(self):
+    def test_beta_requires_latest_and_matches_legacy_client_policy(self):
+        legacy = load_release(ROOT / "internal/client-release.json")
+        support = load_support(ROOT / "internal/client-support.json")
+        for platform in ("ios", "android"):
+            with self.subTest(platform=platform):
+                legacy_channel = legacy[platform]
+                support_channel = support[platform]
+                self.assertEqual(legacy_channel is None, support_channel is None)
+                if support_channel is None:
+                    continue
+                self.assertEqual(
+                    {key: support_channel[key] for key in legacy_channel},
+                    legacy_channel,
+                )
+                self.assertEqual(support_channel["updatePolicy"], "required")
+                self.assertEqual(
+                    (support_channel["minimumVersion"], support_channel["minimumBuild"]),
+                    (support_channel["latestVersion"], support_channel["latestBuild"]),
+                )
+                self.assertEqual(urlsplit(support_channel["updateUrl"]).hostname, "testflight.apple.com")
+
+    def test_published_generator_channels_retain_their_frozen_contracts(self):
         public = load_manifest(ROOT / "manifest.json")
         internal = load_manifest(ROOT / "internal/manifest.json")
-        public_policy = load_release(ROOT / "client-release.json")
-        internal_policy = load_release(ROOT / "internal/client-release.json")
         self.assertEqual(public["revision"], 6)
         self.assertEqual(public["windows"][0]["edition"], "local-v4")
-        self.assertEqual(public_policy["revision"], 31)
-        self.assertEqual(public_policy["ios"]["latestBuild"], 38)
-        self.assertEqual(public_policy["ios"]["minimumBuild"], 38)
-        self.assertEqual(internal_policy["revision"], 32)
-        self.assertEqual(internal_policy["ios"]["latestVersion"], "1.0.1")
-        self.assertEqual(internal_policy["ios"]["latestBuild"], 55)
-        self.assertEqual(internal_policy["ios"]["minimumVersion"], "1.0.1")
-        self.assertEqual(internal_policy["ios"]["minimumBuild"], 55)
-        support = load_support(ROOT / "internal/client-support.json")
-        self.assertEqual(support["revision"], 33)
-        self.assertEqual(support["ios"]["updatePolicy"], "required")
-        self.assertEqual(support["ios"]["blockedRanges"], [])
-        self.assertEqual({key: support["ios"][key] for key in internal_policy["ios"]}, internal_policy["ios"])
-        self.assertEqual(public_policy["ios"]["updateUrl"], "https://testflight.apple.com/join/CCCawA1Q")
         self.assertEqual(internal["windows"], [{
             "from": "0001-01-01", "through": "2026-12-31",
             "edition": "local-v8", "minBuild": {"ios": 29, "android": 29},

@@ -16,7 +16,6 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from check_release import check_release
 from legal_site import FILES, MAX_LEGAL_INFO_BYTES, MAX_LEGAL_SOURCE_BYTES, load_editions, load_reader_drafts, render_document, render_legal_info
 from validate_client_release import load as load_client_release
-from validate_client_support import load as load_client_support
 
 
 class Page(HTMLParser):
@@ -1126,12 +1125,32 @@ class LegalSiteTests(unittest.TestCase):
         self.assertNotIn("testflight.apple.com", source)
         self.assertFalse(any(urlsplit(target).netloc == "testflight.apple.com" for target in Page(source).targets))
 
+    def version_policy(self, *, revision=7, **channel):
+        # Complete synthetic input: release changes must not alter test scenarios.
+        policy = {
+            "schemaVersion": 2,
+            "revision": revision,
+            "ios": {
+                "latestVersion": "2.3.0", "latestBuild": 80,
+                "minimumVersion": "2.2.0", "minimumBuild": 70,
+                "updateUrl": "https://testflight.apple.com/join/AbCdEf12",
+                "blockedRanges": [], "updatePolicy": "required",
+            },
+            "android": None,
+        }
+        policy["ios"].update(channel)
+        return policy
+
+    def write_version_policies(self, public, internal):
+        for name, policy in (("client-support.json", public),
+                             ("internal/client-support.json", internal)):
+            (self.root / name).write_text(json.dumps(policy))
+
     def test_current_versions_groups_matching_beta_policies_and_marks_release_not_released(self):
-        # This case deliberately shares both sources; the live channels can differ.
-        (self.root / "internal/client-support.json").write_bytes((self.root / "client-support.json").read_bytes())
+        policy = self.version_policy()
+        self.write_version_policies(policy, policy)
         policy_bytes = {name: (self.root / name).read_bytes() for name in ("client-support.json", "internal/client-support.json")}
         output = self.build()
-        policy = load_client_support(self.root / "client-support.json")
         source = (output / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
         self.assertEqual(beta.count('<h3>Current app policy</h3>'), 1)
@@ -1158,23 +1177,22 @@ class LegalSiteTests(unittest.TestCase):
             self.assertNotIn("/legal/", targets)
 
     def test_current_versions_follows_policy_changes_without_hardcoded_build_numbers(self):
-        policy = load_client_support(self.root / "client-support.json")
-        policy["revision"] += 1
-        policy["ios"].update(latestVersion="0.2.0", latestBuild=50, minimumVersion="0.1.0", minimumBuild=36)
-        for source in ("client-support.json", "internal/client-support.json"):
-            (self.root / source).write_text(json.dumps(policy))
-        output = self.build()
-        text = normalized((output / "versions/index.html").read_text())
-        self.assertIn("Latest supported</dt><dd>0.2.0 · Build 50", text)
-        self.assertIn("Minimum version</dt><dd>0.1.0 · Build 36", text)
-        self.assertIn(f'Policy revision {policy["revision"]}', text)
+        for version, latest, minimum in (("2.3.0", 80, 70), ("4.1.0", 217, 205)):
+            with self.subTest(version=version, latest=latest):
+                policy = self.version_policy(latestVersion=version, latestBuild=latest,
+                                             minimumVersion=version, minimumBuild=minimum)
+                self.write_version_policies(policy, policy)
+                output = self.build()
+                text = normalized((output / "versions/index.html").read_text())
+                self.assertIn(f"Latest supported</dt><dd>{version} · Build {latest}", text)
+                self.assertIn(f"Minimum version</dt><dd>{version} · Build {minimum}", text)
+                self.assertIn(f'Policy revision {policy["revision"]}', text)
 
     def test_current_versions_keeps_distinct_app_store_and_testflight_policies_separate(self):
-        beta_policy = load_client_support(self.root / "client-support.json")
-        release_policy = json.loads(json.dumps(beta_policy))
-        release_policy["revision"] += 1
-        release_policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
-                             updateUrl="https://apps.apple.com/app/id6817787046")
+        beta_policy = self.version_policy()
+        release_policy = self.version_policy(revision=8, latestVersion="1.0.0", latestBuild=50,
+                                             minimumVersion="1.0.0", minimumBuild=50,
+                                             updateUrl="https://apps.apple.com/app/id6817787046")
         for release_path, beta_path in (("client-support.json", "internal/client-support.json"),
                                         ("internal/client-support.json", "client-support.json")):
             with self.subTest(release_policy=release_path):
@@ -1196,11 +1214,10 @@ class LegalSiteTests(unittest.TestCase):
                 self.assert_no_testflight_invitation(source)
 
     def test_current_versions_groups_matching_app_store_policies_and_keeps_empty_beta_section(self):
-        policy = load_client_support(self.root / "client-support.json")
-        policy["ios"].update(latestVersion="1.0.0", latestBuild=50, minimumVersion="1.0.0", minimumBuild=50,
-                             updateUrl="https://apps.apple.com/app/id6817787046")
-        for name in ("client-support.json", "internal/client-support.json"):
-            (self.root / name).write_text(json.dumps(policy))
+        policy = self.version_policy(latestVersion="1.0.0", latestBuild=50,
+                                     minimumVersion="1.0.0", minimumBuild=50,
+                                     updateUrl="https://apps.apple.com/app/id6817787046")
+        self.write_version_policies(policy, policy)
         source = (self.build() / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
         self.assertIn("No Beta version is listed", beta)
@@ -1214,8 +1231,11 @@ class LegalSiteTests(unittest.TestCase):
         self.assert_no_testflight_invitation(source)
 
     def test_current_versions_uses_internal_beta_instead_of_public_testing_placeholder(self):
+        placeholder = self.version_policy(latestVersion="0.9.0", latestBuild=9,
+                                          minimumVersion="0.9.0", minimumBuild=9)
+        internal = self.version_policy()
+        self.write_version_policies(placeholder, internal)
         public_before = (self.root / "client-support.json").read_bytes()
-        internal = load_client_support(self.root / "internal/client-support.json")
         output = self.build()
         source = (output / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
@@ -1223,20 +1243,18 @@ class LegalSiteTests(unittest.TestCase):
         self.assertIn('<h3>Internal app policy</h3>', beta)
         self.assertIn(f'Latest supported</dt><dd>{internal["ios"]["latestVersion"]} · Build {internal["ios"]["latestBuild"]}', beta)
         self.assertIn(f'Minimum version</dt><dd>{internal["ios"]["minimumVersion"]} · Build {internal["ios"]["minimumBuild"]}', beta)
-        self.assertNotIn('0.1.0 · Build 38', beta)
+        self.assertNotIn('0.9.0 · Build 9', beta)
         self.assertIn('Not released yet', release)
         self.assertEqual(Page(beta).targets, ["/internal/client-support.json"])
         self.assertEqual((output / "client-support.json").read_bytes(), public_before)
         self.assert_no_testflight_invitation(source)
 
     def test_current_versions_preserves_distinct_app_store_policies(self):
-        baseline = load_client_support(self.root / "client-support.json")
         for name, version, build in (("client-support.json", "0.2.0", 50),
                                      ("internal/client-support.json", "0.3.0", 51)):
-            policy = json.loads(json.dumps(baseline))
-            policy["revision"] = build
-            policy["ios"].update(latestVersion=version, latestBuild=build,
-                                 updateUrl="https://apps.apple.com/app/id6817787046")
+            policy = self.version_policy(revision=build, latestVersion=version, latestBuild=build,
+                                         minimumVersion=version, minimumBuild=build,
+                                         updateUrl="https://apps.apple.com/app/id6817787046")
             (self.root / name).write_text(json.dumps(policy))
         source = (self.build() / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
@@ -1254,27 +1272,23 @@ class LegalSiteTests(unittest.TestCase):
     def test_modern_latest_does_not_change_legacy_mandatory_policy(self):
         legacy_before = {name: (self.root / name).read_bytes()
                          for name in ("client-release.json", "internal/client-release.json")}
-        policy = load_client_support(self.root / "client-support.json")
-        policy["revision"] += 1
-        policy["ios"]["latestBuild"] += 1
-        for name in ("client-support.json", "internal/client-support.json"):
-            (self.root / name).write_text(json.dumps(policy))
+        policy = self.version_policy(revision=8, latestBuild=81)
+        self.write_version_policies(policy, policy)
         output = self.build()
         source = (output / "versions/index.html").read_text()
-        self.assertIn(f'Latest supported</dt><dd>0.1.0 · Build {policy["ios"]["latestBuild"]}', source)
+        self.assertIn('Latest supported</dt><dd>2.3.0 · Build 81', source)
         self.assertIn("latest available update before continuing", source)
         for name, raw in legacy_before.items():
             self.assertEqual((output / name).read_bytes(), raw)
 
     def test_versions_explains_minimum_blocked_range_and_optional_public_updates(self):
-        policy = load_client_support(self.root / "client-support.json")
-        policy["ios"].update(latestVersion="1.1.0", latestBuild=55,
+        policy = self.version_policy(latestVersion="1.1.0", latestBuild=55,
                              minimumVersion="1.0.0", minimumBuild=39,
                              updateUrl="https://apps.apple.com/app/id6817787046", updatePolicy="optional",
                              blockedRanges=[{"fromVersion": "1.0.0", "fromBuild": 40,
                                              "throughVersion": "1.0.0", "throughBuild": 42,
                                              "reason": "security"}])
-        (self.root / "client-support.json").write_text(json.dumps(policy))
+        self.write_version_policies(policy, self.version_policy())
         source = (self.build() / "versions/index.html").read_text()
         beta, release = self.version_sections(source)
         self.assertIn("latest available update before continuing", beta)
