@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_manifest import load as load_manifest
 from validate_client_release import load as load_release
+from validate_client_support import load as load_support
 
 
 class InternalConfigurationTests(unittest.TestCase):
@@ -20,10 +21,16 @@ class InternalConfigurationTests(unittest.TestCase):
         self.assertEqual(public_policy["revision"], 31)
         self.assertEqual(public_policy["ios"]["latestBuild"], 38)
         self.assertEqual(public_policy["ios"]["minimumBuild"], 38)
-        self.assertEqual(internal_policy["revision"], 31)
-        self.assertEqual(internal_policy["ios"]["latestBuild"], 38)
-        self.assertEqual(internal_policy["ios"]["minimumBuild"], 38)
-        self.assertEqual(public_policy, internal_policy)
+        self.assertEqual(internal_policy["revision"], 32)
+        self.assertEqual(internal_policy["ios"]["latestVersion"], "1.0.1")
+        self.assertEqual(internal_policy["ios"]["latestBuild"], 55)
+        self.assertEqual(internal_policy["ios"]["minimumVersion"], "1.0.1")
+        self.assertEqual(internal_policy["ios"]["minimumBuild"], 55)
+        support = load_support(ROOT / "internal/client-support.json")
+        self.assertEqual(support["revision"], 33)
+        self.assertEqual(support["ios"]["updatePolicy"], "required")
+        self.assertEqual(support["ios"]["blockedRanges"], [])
+        self.assertEqual({key: support["ios"][key] for key in internal_policy["ios"]}, internal_policy["ios"])
         self.assertEqual(public_policy["ios"]["updateUrl"], "https://testflight.apple.com/join/CCCawA1Q")
         self.assertEqual(internal["windows"], [{
             "from": "0001-01-01", "through": "2026-12-31",
