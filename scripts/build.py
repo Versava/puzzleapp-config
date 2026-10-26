@@ -9,6 +9,7 @@ from legal_site import build_legal_site, load_editions, render_legal_info, rende
 from validate_client_release import load as load_client_release
 from validate_client_support import load as load_client_support
 from validate_app_ads import load as load_app_ads
+from validate_release_policy import load_index
 
 ROOT = Path(__file__).resolve().parent.parent
 load(ROOT / "manifest.json")
@@ -21,6 +22,7 @@ load_client_release(ROOT / "internal/client-release.json")
 load_client_support(ROOT / "client-support.json")
 load_client_support(ROOT / "internal/client-support.json")
 app_ads = load_app_ads(ROOT / "app-ads.txt")
+release_index = load_index(ROOT) if (ROOT / "releases/index.json").is_file() else None
 # Validate the legal sources/navigation before replacing the old build output.
 edition, editions = load_editions(ROOT)
 render_pages(ROOT, edition, editions)
@@ -36,5 +38,10 @@ if app_ads is not None:
 (OUTPUT / "internal").mkdir()
 for name in ("manifest.json", "manifest-v5.json", "manifest-v6.json", "manifest-v7.json", "client-release.json", "client-support.json"):
     shutil.copyfile(ROOT / "internal" / name, OUTPUT / "internal" / name)
+if release_index is not None:
+    (OUTPUT / "releases").mkdir()
+    for name in ("index.json", "alpha.json", "beta.json", "public.json"):
+        shutil.copyfile(ROOT / "releases" / name, OUTPUT / "releases" / name)
+    shutil.copyfile(ROOT / "versions.js", OUTPUT / "versions.js")
 build_legal_site(ROOT, OUTPUT, legal_info=legal_info)
 print(json.dumps({"publishedFiles": sorted(str(path.relative_to(OUTPUT)) for path in OUTPUT.rglob("*") if path.is_file())}))

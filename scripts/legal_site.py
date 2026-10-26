@@ -240,10 +240,11 @@ def render_pages(root, current, editions):
         if active:
             navigation = navigation.replace(f'href="{active}"', f'href="{active}" aria-current="page"')
         robots = '<meta name="robots" content="noindex, follow">' if testing else ""
+        dynamic_versions = '<script src="/versions.js" defer></script>' if path == "/versions/" and (root / "releases/index.json").is_file() else ""
         return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} | Daily Pause</title><meta name="description" content="{html.escape(title)} for Daily Pause by Versava Limited.">{robots}
-<link rel="canonical" href="{HOST}{path}"><link rel="icon" href="/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css"></head>
+<link rel="canonical" href="{HOST}{path}"><link rel="icon" href="/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/styles.css">{dynamic_versions}</head>
 <body><a class="skip-link" href="#main">Skip to content</a>{navigation}{body}{footer[0]}</body></html>
 '''
 
@@ -354,6 +355,9 @@ def render_pages(root, current, editions):
 <p class="support-intro">Supported iPhone versions are listed separately for Beta and Release. An upgrade is required immediately below the minimum supported version or for a listed blocked version.</p>
 <section class="support-section" aria-labelledby="beta-versions"><h2 id="beta-versions">Beta</h2><p>{beta_status}</p>{"".join(cards["beta"])}</section>
 <section class="support-section" aria-labelledby="release-versions"><h2 id="release-versions">Release</h2><p>{release_status}</p>{"".join(cards["release"])}</section></main>'''
+    if (root / "releases/index.json").is_file():
+        from release_versions import render as render_release_versions
+        versions = '<main id="main" class="support-page versions-page page-width"><h1>Current versions</h1>' + render_release_versions(root) + '</main>'
     add("/versions/", page("Current versions", versions, "/versions/", active="/versions/"))
     return pages
 

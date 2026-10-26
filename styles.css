@@ -77,6 +77,25 @@ h1 { font-size:clamp(2.5rem,5.5vw,4.5rem); line-height:1.08; letter-spacing:-.06
 .version-facts div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.4rem 1rem; }
 .version-facts dt { color:var(--quiet); font-size:.9rem; }
 .version-facts dd { margin:0; font-weight:700; }
+.versions-page { padding-top:3.5rem; }
+.versions-page h1 { font-size:clamp(1.9rem,4vw,2.5rem); margin:0 0 1.75rem; }
+#release-details { background:var(--tile); border:1px solid var(--line); border-radius:22px; overflow:hidden; }
+#release-details .support-section { display:grid; grid-template-columns:1fr 2.4fr; align-items:center; gap:1.5rem; padding:1.65rem 1.8rem; }
+#release-details .support-section + .support-section { border-top:1px solid var(--line); }
+#release-details .support-section h2 { display:flex; align-items:center; gap:.65rem; font-size:1rem; margin:0; }
+#release-details .support-section h2::before { content:""; width:8px; height:8px; flex:none; border-radius:50%; background:#568671; }
+#release-details #beta-versions::before { background:#797fa9; }
+#release-details .version-card { border:0; border-radius:0; padding:0; margin:0; background:transparent; }
+#release-details .version-facts { display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; margin:0; }
+#release-details .version-facts div { display:flex; flex-direction:column; gap:.45rem; }
+#release-details .version-facts dt { font-size:.73rem; line-height:1.4; }
+#release-details .version-facts dd { font-size:1.55rem; font-weight:700; line-height:1.15; font-variant-numeric:tabular-nums; }
+@media (max-width:480px) {
+  #release-details .support-section { grid-template-columns:.75fr 2.3fr; gap:1rem; padding:1.4rem 1.15rem; }
+  #release-details .version-facts { gap:.8rem; }
+  #release-details .version-facts dt { font-size:.66rem; }
+  #release-details .version-facts dd { font-size:1.3rem; }
+}
 .support-section { padding-block:1.25rem; }
 .support-section h2 { font-size:1.05rem; margin:0 0 .65rem; }
 .support-section p,.support-section li { color:var(--quiet); font-size:.91rem; line-height:1.75; }
