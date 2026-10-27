@@ -1,1 +1,15 @@
-{"schemaVersion":3,"revision":1,"track":"alpha","ios":null,"android":null}
+{
+  "schemaVersion": 3,
+  "revision": 2,
+  "track": "alpha",
+  "ios": {
+    "latestVersion": "1.1.0",
+    "latestBuild": 1,
+    "minimumVersion": "1.1.0",
+    "minimumBuild": 1,
+    "updateUrl": "https://testflight.apple.com/join/CCCawA1Q",
+    "blockedRanges": [],
+    "updatePolicy": "required"
+  },
+  "android": null
+}
