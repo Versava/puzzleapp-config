@@ -4,9 +4,9 @@
   "track": "alpha",
   "ios": {
     "latestVersion": "1.1.0",
-    "latestBuild": 4,
+    "latestBuild": 5,
     "minimumVersion": "1.1.0",
-    "minimumBuild": 4,
+    "minimumBuild": 5,
     "updateUrl": "https://testflight.apple.com/join/CCCawA1Q",
     "blockedRanges": [],
     "updatePolicy": "required"
