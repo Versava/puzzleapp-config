@@ -5,7 +5,7 @@
   "documents": {
     "terms": {
       "file": "terms-public.md",
-      "sha256": "d83806e848346e876305397285afa80bf4d0bc51cafc85a5972759fa5e7820ac"
+      "sha256": "43d7432e1144472654abd4fb34c01b49dcf5f7d50783af2168ce7da38d3a7a93"
     },
     "privacy": {
       "file": "privacy-public.md",

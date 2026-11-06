@@ -166,8 +166,8 @@ privacy@versava.net, subject to reasonable verification of the request and its
 recipient. The applicable Privacy Notice explains data handling, retention and
 request arrangements.
 
-You may initiate deletion in the app without email or staff approval. The app
-shows the 14-calendar-day grace period and deletion date before confirmation.
+You may initiate deletion in the app without email or staff approval. Requests
+follow a 14-calendar-day grace period; the app shows the deletion date.
 When the service confirms that a new deletion request is queued, account access
 is suspended, you are signed out and the account's data is removed from that
 device. To keep the account, contact support@versava.net before the displayed

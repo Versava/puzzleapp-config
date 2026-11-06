@@ -5,7 +5,7 @@
   "documents": {
     "terms": {
       "file": "terms-beta.md",
-      "sha256": "f48357cca48d41aea4275dada41784e08703716dfc700aca16b7706cc781ccf1"
+      "sha256": "688adcfe78d83623e1813fd50aad55ae1ad931f871ecc4abcb46dffaa87e5be9"
     },
     "privacy": {
       "file": "privacy-beta.md",
