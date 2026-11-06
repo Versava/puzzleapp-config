@@ -303,8 +303,8 @@ def render_pages(root, current, editions):
 <p>We may reasonably verify ownership. Do not email passwords, access tokens or other usable account credentials.</p>
 <p>See our <a href="/privacy/">Public Privacy Notice</a> for personal-data handling, privacy rights, request arrangements and EU representative details.</p><!--/email_off--></section>
 <section class="support-section"><h2>Deleting your account</h2>
-<p>Choose <strong>Account → Help &amp; about → Contact support → Delete account</strong> to open the in-app confirmation.</p>
-<p>After confirmation, deletion is scheduled for 14 calendar days later. Your account remains usable during this grace period. Account shows the scheduled date and a <strong>Stop deletion</strong> action while cancellation remains possible. Stopping deletion keeps your account.</p>
+<p>Choose <strong>Account → Help &amp; about → Delete account</strong>, immediately below Contact support, to open the in-app confirmation.</p>
+<p>After the service accepts the request, your account is suspended and deletion is in progress. The app signs out and clears that account’s local data. It does not display a deletion date. To cancel deletion, contact <a href="mailto:support@versava.net">support@versava.net</a> immediately with your support code.</p>
 <p>Final deletion ends account access and removes balances, progress, unlocks and unclaimed rewards. Signing out or uninstalling does not cancel a scheduled deletion request or itself delete server-held records.</p></section>
 <section class="support-section"><h2>Subscriptions and purchase recovery</h2>
 <p>Account deletion does not cancel Apple subscription billing; manage the subscription separately.</p>
