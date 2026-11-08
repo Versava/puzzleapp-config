@@ -1,12 +1,12 @@
 {
   "schemaVersion": 3,
-  "revision": 7,
+  "revision": 8,
   "track": "alpha",
   "ios": {
     "latestVersion": "1.1.0",
-    "latestBuild": 7,
+    "latestBuild": 8,
     "minimumVersion": "1.1.0",
-    "minimumBuild": 7,
+    "minimumBuild": 8,
     "updateUrl": "https://testflight.apple.com/join/CCCawA1Q",
     "blockedRanges": [],
     "updatePolicy": "required"
